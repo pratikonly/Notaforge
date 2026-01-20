@@ -550,18 +550,18 @@ export function NotaForgeDashboard() {
             </div>
 
             {/* Modal Content */}
-            <div className="space-y-4">
+            <div className="space-y-4 w-full overflow-hidden">
               {/* Text Content - Editable */}
               {isEditing ? (
                 <Textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
-                  className="min-h-[150px] bg-secondary border-border text-white"
+                  className="min-h-[150px] bg-secondary border-border text-white w-full"
                   placeholder="Note content..."
                 />
               ) : (
                 selectedNote.content && (
-                  <p className="text-muted-foreground whitespace-pre-wrap">{selectedNote.content}</p>
+                  <p className="text-muted-foreground whitespace-pre-wrap break-words overflow-wrap-anywhere w-full">{selectedNote.content}</p>
                 )
               )}
 
@@ -580,10 +580,10 @@ export function NotaForgeDashboard() {
                   href={selectedNote.link_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-white hover:underline break-all p-3 bg-secondary rounded border border-border"
+                  className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full overflow-hidden"
                 >
                   <ExternalLink size={18} className="shrink-0" />
-                  <span>{selectedNote.link_url}</span>
+                  <span className="break-all overflow-hidden">{selectedNote.link_url}</span>
                 </a>
               )}
 
