@@ -30,28 +30,11 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%;
+    --border: 0 0% 20%;
     --input: 0 0% 8%;
     --ring: 0 0% 100%;
 
-    --radius: 0.75rem;
-
-    /* Custom PAlock tokens */
-    --vault-glow: 0 0% 100%;
-    --vault-surface: 0 0% 0%;
-    --vault-accent: 0 0% 80%;
-    --vault-success: 142 70% 45%;
-    --vault-warning: 38 92% 50%;
-
-    /* Gradients */
-    --gradient-vault: linear-gradient(135deg, hsl(0 0% 0%) 0%, hsl(0 0% 0%) 100%);
-    --gradient-glow: linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.02) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 5%) 0%, hsl(0 0% 0%) 100%);
-
-    /* Shadows */
-    --shadow-glow: 0 0 40px hsl(0 0% 100% / 0.1);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.8);
-    --shadow-elevated: 0 8px 32px hsl(0 0% 0% / 0.9);
+    --radius: 0.5rem;
 
     --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 0 0% 100%;
@@ -59,7 +42,7 @@
     --sidebar-primary-foreground: 0 0% 0%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;
+    --sidebar-border: 0 0% 20%;
     --sidebar-ring: 0 0% 100%;
   }
 
@@ -88,7 +71,7 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%;
+    --border: 0 0% 20%;
     --input: 0 0% 8%;
     --ring: 0 0% 100%;
   }
@@ -124,38 +107,6 @@
 }
 
 @layer components {
-  .vault-container {
-    background: var(--gradient-vault);
-    min-height: 100vh;
-  }
-
-  .vault-card {
-    background: var(--gradient-card);
-    box-shadow: var(--shadow-card);
-    @apply border border-border rounded-xl;
-  }
-
-  .vault-glow {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .vault-input {
-    @apply bg-input border-border focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
-  }
-
-  .note-card {
-    background: linear-gradient(180deg, hsl(0 0% 5%) 0%, hsl(0 0% 0%) 100%);
-    @apply border border-border hover:border-muted-foreground/30 transition-all duration-300;
-  }
-
-  .note-card:hover {
-    box-shadow: 0 0 20px hsl(0 0% 100% / 0.05);
-  }
-
-  .glass-effect {
-    @apply backdrop-blur-xl bg-card/80;
-  }
-
   /* Mobile-optimized container padding */
   .container {
     @apply px-4;
@@ -166,52 +117,9 @@
       @apply px-3;
     }
   }
-
-  /* Draggable elements */
-  .draggable-note {
-    @apply cursor-grab active:cursor-grabbing touch-manipulation;
-  }
-
-  .draggable-note:active {
-    @apply opacity-70 scale-[0.98];
-  }
-
-  .drop-zone-active {
-    @apply ring-2 ring-primary bg-primary/10;
-  }
 }
 
 @layer utilities {
-  .text-glow {
-    text-shadow: 0 0 20px hsl(0 0% 100% / 0.3);
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 20px hsl(0 0% 100% / 0.1);
-    }
-    50% {
-      box-shadow: 0 0 40px hsl(0 0% 100% / 0.2);
-    }
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
   }
