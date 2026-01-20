@@ -40,9 +40,12 @@ export function NotaForgeDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
+    // Check file size based on type (10MB for images, 50MB for files)
+    const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    const maxSizeLabel = type === 'image' ? '10MB' : '50MB';
+    
+    if (file.size > maxSize) {
+      alert(`File size must be less than ${maxSizeLabel}`);
       return;
     }
 
@@ -156,7 +159,7 @@ export function NotaForgeDashboard() {
 
           {/* Center - Main navbar */}
           <div className="flex-1 flex justify-center">
-            <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
+            <div className="w-[40%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
               {/* Left side - SVG Icon */}
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
                 <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
@@ -167,6 +170,9 @@ export function NotaForgeDashboard() {
               <span className="text-base font-semibold tracking-tight">NotaForge</span>
             </div>
           </div>
+          
+          {/* Right spacer for balance */}
+          <div className="w-[140px]"></div>
         </div>
       </header>
 
@@ -174,7 +180,7 @@ export function NotaForgeDashboard() {
         {/* Sidebar - Floating Panel */}
         <aside className="w-72 shrink-0 flex flex-col ml-4">
           {/* Add Note Card */}
-          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col max-h-[calc(100vh-120px)]">
+          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col">
             {/* Title Input */}
             <Input
               placeholder="Note Title"
@@ -188,7 +194,7 @@ export function NotaForgeDashboard() {
               placeholder="Your note (optional)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="mb-4 min-h-[100px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y"
+              className="mb-4 min-h-[120px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y"
             />
             
             {/* Attachment Buttons */}
@@ -228,9 +234,19 @@ export function NotaForgeDashboard() {
               </button>
             </div>
 
+            {/* Link Input - Shows when link type is selected */}
+            {noteType === 'link' && (
+              <Input
+                placeholder="https://example.com"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                className="mb-3 bg-secondary border-border text-white placeholder:text-muted-foreground"
+              />
+            )}
+
             {/* Upload Limits */}
             <p className="text-xs text-muted-foreground mb-4">
-              Max 5 images, 5 files, 5MB each
+              Images: 10MB max | Files: 50MB max
             </p>
             
             {/* Add Note Button */}
@@ -241,36 +257,28 @@ export function NotaForgeDashboard() {
             >
               {isSubmitting ? (
                 <Loader2 className="animate-spin mr-2" size={16} />
+              ) : isUploading ? (
+                <Loader2 className="animate-spin mr-2" size={16} />
               ) : null}
-              Add Note
+              {isUploading ? 'Uploading...' : 'Add Note'}
             </Button>
 
-            {/* Preview Panel - Shows when there's content to preview */}
+            {/* Preview Panel - Shows under Add Note button when there's content */}
             {(fileUrl || (noteType === 'link' && linkUrl)) && (
               <div className="mt-4 pt-4 border-t border-border">
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Preview</h3>
                 
-                {/* Link Input & Preview */}
-                {noteType === 'link' && (
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="https://example.com"
-                      value={linkUrl}
-                      onChange={(e) => setLinkUrl(e.target.value)}
-                      className="bg-secondary border-border text-white placeholder:text-muted-foreground"
-                    />
-                    {linkUrl && (
-                      <a 
-                        href={linkUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-white hover:underline text-sm break-all"
-                      >
-                        <ExternalLink size={14} className="shrink-0" />
-                        <span className="truncate">{linkUrl}</span>
-                      </a>
-                    )}
-                  </div>
+                {/* Link Preview */}
+                {noteType === 'link' && linkUrl && (
+                  <a 
+                    href={linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-white hover:underline text-sm break-all p-2 bg-secondary rounded border border-border"
+                  >
+                    <ExternalLink size={14} className="shrink-0" />
+                    <span className="truncate">{linkUrl}</span>
+                  </a>
                 )}
 
                 {/* Image Preview */}
