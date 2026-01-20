@@ -441,19 +441,19 @@ export function NotaForgeDashboard() {
             </a>
           )}
 
-          {/* Multi-Image Preview - Mobile Optimized Grid */}
+          {/* Multi-Image Preview - Custom size, mobile optimized */}
           {noteType === 'image' && fileUrls.length > 0 && (
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               {fileUrls.map((url, index) => (
-                <div key={index} className="relative group">
+                <div key={index} className="relative group aspect-square">
                   <img 
                     src={url} 
                     alt={`Preview ${index + 1}`}
-                    className="w-full h-14 sm:h-20 object-cover rounded border border-border"
+                    className="w-full h-full object-contain rounded border border-border bg-secondary/50"
                   />
                   <button
                     onClick={() => removeImage(index)}
-                    className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-destructive rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-destructive rounded-full flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   >
                     <X size={10} className="text-white" />
                   </button>
@@ -485,38 +485,68 @@ export function NotaForgeDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Top Navbar - Responsive with symmetry */}
+      {/* Top Navbar */}
       <header className="sticky top-0 z-50 bg-black pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
-        <div className="flex items-center justify-between">
-          {/* Left - Pratik Logo (mobile/tablet: just logo, desktop: logo + text) */}
+        
+        {/* DESKTOP LAYOUT (lg+) - Original layout restored */}
+        <div className="hidden lg:flex items-center">
+          {/* Left - Made by Pratik badge with margin */}
           <a
             href="https://xpratik.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 lg:px-4 lg:py-2 items-center gap-2 hover:bg-secondary transition-colors shrink-0"
+            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 items-center gap-2 hover:bg-secondary transition-colors ml-16"
+          >
+            <img 
+              src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
+              alt="Pratik Logo"
+              className="w-6 h-6 object-contain"
+            />
+            <span className="text-sm text-muted-foreground">Made by Pratik</span>
+          </a>
+
+          {/* Center - Main navbar with w-[60%] */}
+          <div className="flex-1 flex justify-center">
+            <div className="w-[60%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-12 py-3 flex items-center justify-between">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
+                <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
+                <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
+              </svg>
+              <span className="font-semibold tracking-tight">NotaForge</span>
+            </div>
+          </div>
+
+          {/* Right spacer */}
+          <div className="w-[200px] mr-16"></div>
+        </div>
+
+        {/* MOBILE/TABLET LAYOUT (< lg) - Symmetric layout */}
+        <div className="flex lg:hidden items-center justify-between">
+          {/* Left - Logo only */}
+          <a
+            href="https://xpratik.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 items-center hover:bg-secondary transition-colors shrink-0"
           >
             <img 
               src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
               alt="Pratik Logo"
               className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
             />
-            <span className="hidden lg:inline text-sm text-muted-foreground">Made by Pratik</span>
           </a>
 
-          {/* Center - Main navbar (increased width on mobile/tablet) */}
-          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 sm:px-8 lg:px-12 py-2 sm:py-3 flex items-center justify-between gap-8 sm:gap-12 lg:gap-16">
-            {/* Left side - SVG Icon */}
+          {/* Center - Main navbar (increased width) */}
+          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 sm:px-8 py-2 sm:py-3 flex items-center justify-between gap-8 sm:gap-12">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-6 h-6 sm:w-8 sm:h-8">
               <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
               <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
             </svg>
-            
-            {/* Right side - Name */}
             <span className="text-sm sm:text-base font-semibold tracking-tight">NotaForge</span>
           </div>
 
-          {/* Right - Blank spacer for symmetry (matches logo width) */}
-          <div className="w-9 sm:w-10 lg:w-[120px] shrink-0"></div>
+          {/* Right - Blank spacer for symmetry */}
+          <div className="w-9 sm:w-10 shrink-0"></div>
         </div>
       </header>
 
