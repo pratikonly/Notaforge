@@ -139,7 +139,7 @@ export function NotaForgeDashboard() {
       {/* Top Navbar - 70% width centered */}
       <header className="sticky top-0 z-50 bg-black pt-4 pb-2">
         <div className="flex justify-center">
-          <div className="w-[70%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-2 flex items-center justify-between">
+          <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-2 flex items-center justify-between">
             {/* Left side - SVG Icon */}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
               <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
