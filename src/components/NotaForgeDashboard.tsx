@@ -224,9 +224,9 @@ export function NotaForgeDashboard() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden p-2 pt-2 gap-4">
+      <div className="flex flex-1 overflow-y-auto overflow-x-hidden p-2 pt-2 gap-4">
         {/* Sidebar - Floating Panel */}
-        <aside className="w-72 shrink-0 flex flex-col ml-4">
+        <aside className="w-72 shrink-0 flex flex-col ml-4 sticky top-0 self-start h-fit">
           {/* Add Note Card */}
           <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col flex-1 min-h-[500px]">
             {/* Title Input */}
@@ -375,7 +375,7 @@ export function NotaForgeDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6">
+        <main className="flex-1 overflow-visible p-4 md:p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin" size={32} />
@@ -386,7 +386,7 @@ export function NotaForgeDashboard() {
               <p>No notes yet. Add your first note!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-hidden w-full">
               {notes.map((note) => (
                 <div
                   key={note.id}
