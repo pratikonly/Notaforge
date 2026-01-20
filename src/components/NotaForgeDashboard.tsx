@@ -228,7 +228,7 @@ export function NotaForgeDashboard() {
         {/* Sidebar - Floating Panel */}
         <aside className="w-72 shrink-0 flex flex-col ml-4 fixed top-[88px] left-0 z-40">
           {/* Add Note Card */}
-          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col min-h-[540px]">
+          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col min-h-[560px]">
             {/* Title Input */}
             <Input
               placeholder="Note Title"
