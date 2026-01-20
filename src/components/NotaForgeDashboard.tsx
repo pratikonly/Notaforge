@@ -422,38 +422,33 @@ export function NotaForgeDashboard() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Top Navbar - Responsive */}
       <header className="sticky top-0 z-50 bg-black pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
-        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-0">
-          {/* Left - Made by Pratik (hidden on mobile) */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
+          {/* Left - Pratik Logo (mobile/tablet: just logo, desktop: logo + text) */}
           <a
             href="https://xpratik.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden lg:flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 items-center gap-2 hover:bg-secondary transition-colors ml-4"
+            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 lg:px-4 lg:py-2 items-center gap-2 hover:bg-secondary transition-colors shrink-0"
           >
-            <span className="text-sm text-muted-foreground">Made by Pratik</span>
             <img 
               src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
               alt="Pratik Logo"
-              className="w-5 h-5 object-contain"
+              className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
             />
+            <span className="hidden lg:inline text-sm text-muted-foreground">Made by Pratik</span>
           </a>
 
           {/* Center - Main navbar */}
-          <div className="flex-1 flex justify-center lg:justify-center">
-            <div className="w-full sm:w-[80%] lg:w-[60%] max-w-md lg:max-w-none bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
-              {/* Left side - SVG Icon */}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-6 h-6 sm:w-8 sm:h-8">
-                <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
-                <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
-              </svg>
-              
-              {/* Right side - Name */}
-              <span className="text-sm sm:text-base font-semibold tracking-tight">NotaForge</span>
-            </div>
+          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between gap-4 sm:gap-8 lg:gap-16 lg:px-12">
+            {/* Left side - SVG Icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-6 h-6 sm:w-8 sm:h-8">
+              <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
+              <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
+            </svg>
+            
+            {/* Right side - Name */}
+            <span className="text-sm sm:text-base font-semibold tracking-tight">NotaForge</span>
           </div>
-          
-          {/* Right spacer for balance - hidden on mobile/tablet */}
-          <div className="hidden lg:block w-[200px] mr-4"></div>
         </div>
       </header>
 
