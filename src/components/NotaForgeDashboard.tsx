@@ -527,7 +527,7 @@ export function NotaForgeDashboard() {
             href="https://xpratik.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 items-center hover:bg-secondary transition-colors shrink-0 ml-4 sm:ml-8 md:ml-12"
+            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 items-center hover:bg-secondary transition-colors shrink-0 ml-8 sm:ml-16 md:ml-24"
           >
             <img 
               src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
