@@ -136,25 +136,10 @@ export function NotaForgeDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Top Navbar with Made by Pratik on left */}
+      {/* Top Navbar - Centered */}
       <header className="sticky top-0 z-50 bg-black pt-4 pb-2 px-4">
-        <div className="flex items-center justify-center gap-4">
-          {/* Left - Made by Pratik floating pill */}
-          <a
-            href="https://xpratik.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-secondary transition-colors"
-          >
-            <span className="text-sm text-muted-foreground">Made by Pratik</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-5 h-5">
-              <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
-              <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
-            </svg>
-          </a>
-
-          {/* Center - Main navbar */}
-          <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-2 flex items-center justify-between">
+        <div className="flex justify-center">
+          <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
             {/* Left side - SVG Icon */}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
               <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
@@ -169,8 +154,23 @@ export function NotaForgeDashboard() {
 
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         {/* Sidebar - Floating Panel */}
-        <aside className="w-80 shrink-0 flex flex-col gap-4">
-          {/* Add Note Card - Increased height */}
+        <aside className="w-80 shrink-0 flex flex-col gap-3">
+          {/* Made by Pratik - Centered above panel */}
+          <a
+            href="https://xpratik.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 flex items-center justify-center gap-2 hover:bg-secondary transition-colors mx-auto"
+          >
+            <span className="text-sm text-muted-foreground">Made by Pratik</span>
+            <img 
+              src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
+              alt="Pratik Logo"
+              className="w-5 h-5 object-contain"
+            />
+          </a>
+
+          {/* Add Note Card */}
           <div className="bg-secondary/50 border border-border rounded-2xl p-5 flex flex-col flex-1">
             {/* Title Input */}
             <Input
@@ -180,12 +180,12 @@ export function NotaForgeDashboard() {
               className="mb-3 bg-secondary border-border text-white placeholder:text-muted-foreground"
             />
             
-            {/* Content Textarea - Increased height */}
+            {/* Content Textarea */}
             <Textarea
               placeholder="Your note (optional)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="mb-4 min-h-[140px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y flex-1"
+              className="mb-4 min-h-[100px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y"
             />
             
             {/* Attachment Buttons */}
