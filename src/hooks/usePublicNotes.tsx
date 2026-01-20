@@ -155,10 +155,44 @@ export function usePublicNotes() {
     }
   }, [toast]);
 
+  const updateNote = useCallback(async (id: string, noteData: Partial<Note>) => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .update({
+          title: noteData.title,
+          content: noteData.content,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setNotes(prev => prev.map(note => note.id === id ? (data as Note) : note));
+      toast({
+        title: 'Note updated',
+        description: 'Your changes have been saved.',
+      });
+      
+      return data as Note;
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update note',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  }, [toast]);
+
   return {
     notes,
     loading,
     createNote,
+    updateNote,
     deleteNote,
     uploadFile,
     refetch: fetchNotes,
