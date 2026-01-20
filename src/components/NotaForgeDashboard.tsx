@@ -550,7 +550,7 @@ export function NotaForgeDashboard() {
             </div>
 
             {/* Modal Content */}
-            <div className="space-y-4 w-full overflow-hidden">
+            <div className="space-y-4 w-full flex-1 overflow-y-auto overflow-x-hidden">
               {/* Text Content - Editable */}
               {isEditing ? (
                 <Textarea
