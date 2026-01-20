@@ -8,8 +8,6 @@ import {
   FileText, 
   Link2, 
   Trash2, 
-  Menu, 
-  X,
   Loader2,
   ExternalLink,
   Download
@@ -18,7 +16,6 @@ import { format } from 'date-fns';
 
 export function NotaForgeDashboard() {
   const { notes, loading, createNote, deleteNote, uploadFile } = usePublicNotes();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -139,39 +136,25 @@ export function NotaForgeDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Top Navbar - Floating centered */}
+      {/* Top Navbar - 70% width centered */}
       <header className="sticky top-0 z-50 bg-black pt-4 pb-2">
         <div className="flex justify-center">
-          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 flex items-center gap-8">
+          <div className="w-[70%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-2 flex items-center justify-between">
             {/* Left side - SVG Icon */}
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
-                <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
-                <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
-              </svg>
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
+              <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
+              <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
+            </svg>
             
             {/* Right side - Name */}
             <span className="text-base font-semibold tracking-tight">NotaForge</span>
           </div>
         </div>
-        
-        {/* Menu toggle - separate */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute left-4 top-4 p-2 hover:bg-secondary rounded transition-colors"
-        >
-          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside 
-          className={`${
-            sidebarOpen ? 'w-80' : 'w-0'
-          } transition-all duration-300 border-r border-border bg-black flex flex-col overflow-hidden shrink-0`}
-        >
+        {/* Sidebar - Always visible */}
+        <aside className="w-80 border-r border-border bg-black flex flex-col shrink-0">
           <div className="p-4 flex-1 overflow-y-auto">
             <h2 className="text-lg font-semibold mb-4">Add Note</h2>
             
