@@ -195,7 +195,7 @@ export function NotaForgeDashboard() {
             href="https://xpratik.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-secondary transition-colors"
+            className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-secondary transition-colors ml-16"
           >
             <span className="text-sm text-muted-foreground">Made by Pratik</span>
             <img 
@@ -207,7 +207,7 @@ export function NotaForgeDashboard() {
 
           {/* Center - Main navbar */}
           <div className="flex-1 flex justify-center ml-8">
-            <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
+            <div className="w-[60%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
               {/* Left side - SVG Icon */}
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
                 <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
@@ -228,7 +228,7 @@ export function NotaForgeDashboard() {
         {/* Sidebar - Floating Panel */}
         <aside className="w-72 shrink-0 flex flex-col ml-4">
           {/* Add Note Card */}
-          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col flex-1">
+          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col flex-1 min-h-[500px]">
             {/* Title Input */}
             <Input
               placeholder="Note Title"
@@ -242,7 +242,7 @@ export function NotaForgeDashboard() {
               placeholder="Your note (optional)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="mb-4 min-h-[180px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y flex-1"
+              className="mb-4 min-h-[100px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y"
             />
             
             {/* Attachment Buttons */}
@@ -375,7 +375,7 @@ export function NotaForgeDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin" size={32} />
@@ -386,12 +386,12 @@ export function NotaForgeDashboard() {
               <p>No notes yet. Add your first note!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-hidden">
               {notes.map((note) => (
                 <div
                   key={note.id}
                   onClick={() => setSelectedNote(note)}
-                  className="bg-black border border-border rounded-lg p-4 flex flex-col gap-3 hover:border-muted-foreground/50 transition-colors cursor-pointer h-[200px] w-full"
+                  className="bg-black border border-border rounded-lg p-4 flex flex-col gap-3 hover:border-muted-foreground/50 transition-colors cursor-pointer h-[280px] w-full"
                 >
                   {/* Card Header */}
                   <div className="flex items-start justify-between gap-2">
