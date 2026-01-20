@@ -206,7 +206,7 @@ export function NotaForgeDashboard() {
           </a>
 
           {/* Center - Main navbar */}
-          <div className="flex-1 flex justify-center ml-8">
+          <div className="flex-1 flex justify-center">
             <div className="w-[60%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
               {/* Left side - SVG Icon */}
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
@@ -219,8 +219,8 @@ export function NotaForgeDashboard() {
             </div>
           </div>
           
-          {/* Right spacer for balance */}
-          <div className="w-[140px]"></div>
+          {/* Right spacer for balance - matches left badge width (~200px) */}
+          <div className="w-[200px] mr-16"></div>
         </div>
       </header>
 
