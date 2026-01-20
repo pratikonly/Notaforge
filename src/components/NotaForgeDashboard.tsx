@@ -12,12 +12,14 @@ import {
   ExternalLink,
   Download,
   Pencil,
-  X
+  X,
+  FileIcon,
+  Check
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function NotaForgeDashboard() {
-  const { notes, loading, createNote, deleteNote, uploadFile } = usePublicNotes();
+  const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
   
   // Form state
   const [title, setTitle] = useState('');
@@ -28,7 +30,11 @@ export function NotaForgeDashboard() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
   const resetForm = () => {
     setTitle('');
@@ -53,6 +59,7 @@ export function NotaForgeDashboard() {
     }
 
     setIsUploading(true);
+    setUploadSuccess(false);
     const url = await uploadFile(file);
     setIsUploading(false);
 
@@ -60,7 +67,39 @@ export function NotaForgeDashboard() {
       setFileUrl(url);
       setFileName(file.name);
       setNoteType(type);
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
     }
+  };
+
+  const clearAttachment = () => {
+    setFileUrl(null);
+    setFileName(null);
+    setNoteType('text');
+    setLinkUrl('');
+  };
+
+  const openEditModal = (note: Note) => {
+    setSelectedNote(note);
+    setEditTitle(note.title);
+    setEditContent(note.content || '');
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedNote) return;
+    const updated = await updateNote(selectedNote.id, {
+      title: editTitle,
+      content: editContent,
+    });
+    if (updated) {
+      setSelectedNote(updated);
+      setIsEditing(false);
+    }
+  };
+
+  const isPdfFile = (note: Note) => {
+    return note.file_name?.toLowerCase().endsWith('.pdf');
   };
 
   const handleSubmit = async () => {
@@ -120,15 +159,21 @@ export function NotaForgeDashboard() {
       case 'video':
       case 'audio':
         return note.file_url ? (
-          <a 
-            href={note.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-white hover:underline"
-          >
-            <Download size={14} className="shrink-0" />
-            <span className="truncate">{note.file_name || 'Download file'}</span>
-          </a>
+          <div className="flex flex-col items-center justify-center h-full gap-2 py-4">
+            {isPdfFile(note) ? (
+              <>
+                <div className="w-12 h-14 bg-red-600 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">PDF</span>
+                </div>
+                <span className="text-xs text-muted-foreground truncate max-w-full px-2">{note.file_name}</span>
+              </>
+            ) : (
+              <>
+                <FileIcon size={32} className="text-muted-foreground" />
+                <span className="text-xs text-muted-foreground truncate max-w-full px-2">{note.file_name || 'File'}</span>
+              </>
+            )}
+          </div>
         ) : null;
       
       default:
@@ -161,8 +206,8 @@ export function NotaForgeDashboard() {
           </a>
 
           {/* Center - Main navbar */}
-          <div className="flex-1 flex justify-center">
-            <div className="w-[40%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
+          <div className="flex-1 flex justify-center ml-8">
+            <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
               {/* Left side - SVG Icon */}
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
                 <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
@@ -183,7 +228,7 @@ export function NotaForgeDashboard() {
         {/* Sidebar - Floating Panel */}
         <aside className="w-72 shrink-0 flex flex-col ml-4">
           {/* Add Note Card */}
-          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col">
+          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col flex-1">
             {/* Title Input */}
             <Input
               placeholder="Note Title"
@@ -197,7 +242,7 @@ export function NotaForgeDashboard() {
               placeholder="Your note (optional)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="mb-4 min-h-[120px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y"
+              className="mb-4 min-h-[180px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y flex-1"
             />
             
             {/* Attachment Buttons */}
@@ -247,10 +292,17 @@ export function NotaForgeDashboard() {
               />
             )}
 
-            {/* Upload Limits */}
-            <p className="text-xs text-muted-foreground mb-4">
-              Images: 10MB max | Files: 50MB max
-            </p>
+            {/* Upload Limits & Success */}
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs text-muted-foreground">
+                Images: 10MB max | Files: 50MB max
+              </p>
+              {uploadSuccess && (
+                <span className="text-xs text-green-500 flex items-center gap-1">
+                  <Check size={12} /> Uploaded
+                </span>
+              )}
+            </div>
             
             {/* Add Note Button */}
             <Button
@@ -269,7 +321,15 @@ export function NotaForgeDashboard() {
             {/* Preview Panel - Shows under Add Note button when there's content */}
             {(fileUrl || (noteType === 'link' && linkUrl)) && (
               <div className="mt-4 pt-4 border-t border-border">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Preview</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-muted-foreground">Preview</h3>
+                  <button
+                    onClick={clearAttachment}
+                    className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+                  >
+                    <X size={12} /> Remove
+                  </button>
+                </div>
                 
                 {/* Link Preview */}
                 {noteType === 'link' && linkUrl && (
@@ -299,7 +359,13 @@ export function NotaForgeDashboard() {
                 {/* File Preview */}
                 {noteType === 'file' && fileUrl && (
                   <div className="flex items-center gap-2 p-2 bg-secondary rounded border border-border">
-                    <FileText size={16} className="text-white shrink-0" />
+                    {fileName?.toLowerCase().endsWith('.pdf') ? (
+                      <div className="w-6 h-7 bg-red-600 rounded flex items-center justify-center">
+                        <span className="text-white text-[8px] font-bold">PDF</span>
+                      </div>
+                    ) : (
+                      <FileText size={16} className="text-white shrink-0" />
+                    )}
                     <span className="text-sm truncate">{fileName}</span>
                   </div>
                 )}
@@ -336,7 +402,7 @@ export function NotaForgeDashboard() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedNote(note);
+                          openEditModal(note);
                         }}
                         className="text-muted-foreground hover:text-white transition-colors shrink-0"
                       >
@@ -374,7 +440,7 @@ export function NotaForgeDashboard() {
       {selectedNote && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-blue-900/10 backdrop-blur-sm"
-          onClick={() => setSelectedNote(null)}
+          onClick={() => { setSelectedNote(null); setIsEditing(false); }}
         >
           <div 
             className="w-[70%] max-h-[80vh] bg-black border border-border rounded-2xl p-6 overflow-y-auto"
@@ -382,20 +448,48 @@ export function NotaForgeDashboard() {
           >
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 mb-4">
-              <h2 className="text-xl font-bold text-white">{selectedNote.title}</h2>
-              <button
-                onClick={() => setSelectedNote(null)}
-                className="text-muted-foreground hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
+              {isEditing ? (
+                <Input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="text-xl font-bold bg-secondary border-border text-white"
+                  placeholder="Note title"
+                />
+              ) : (
+                <h2 className="text-xl font-bold text-white">{selectedNote.title}</h2>
+              )}
+              <div className="flex items-center gap-2">
+                {!isEditing && (
+                  <button
+                    onClick={() => openEditModal(selectedNote)}
+                    className="text-muted-foreground hover:text-white transition-colors"
+                  >
+                    <Pencil size={20} />
+                  </button>
+                )}
+                <button
+                  onClick={() => { setSelectedNote(null); setIsEditing(false); }}
+                  className="text-muted-foreground hover:text-white transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
             </div>
 
             {/* Modal Content */}
             <div className="space-y-4">
-              {/* Text Content */}
-              {selectedNote.content && (
-                <p className="text-muted-foreground whitespace-pre-wrap">{selectedNote.content}</p>
+              {/* Text Content - Editable */}
+              {isEditing ? (
+                <Textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="min-h-[150px] bg-secondary border-border text-white"
+                  placeholder="Note content..."
+                />
+              ) : (
+                selectedNote.content && (
+                  <p className="text-muted-foreground whitespace-pre-wrap">{selectedNote.content}</p>
+                )
               )}
 
               {/* Image */}
@@ -420,19 +514,49 @@ export function NotaForgeDashboard() {
                 </a>
               )}
 
-              {/* File */}
+              {/* File/PDF */}
               {(selectedNote.note_type === 'file' || selectedNote.note_type === 'pdf') && selectedNote.file_url && (
-                <a 
-                  href={selectedNote.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border"
-                >
-                  <Download size={18} className="shrink-0" />
-                  <span>{selectedNote.file_name || 'Download file'}</span>
-                </a>
+                <div className="space-y-4">
+                  {/* PDF Embed Preview */}
+                  {isPdfFile(selectedNote) && (
+                    <iframe 
+                      src={selectedNote.file_url}
+                      className="w-full h-[400px] rounded border border-border bg-white"
+                      title="PDF Preview"
+                    />
+                  )}
+                  {/* Download Link */}
+                  <a 
+                    href={selectedNote.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border"
+                  >
+                    <Download size={18} className="shrink-0" />
+                    <span>{selectedNote.file_name || 'Download file'}</span>
+                  </a>
+                </div>
               )}
             </div>
+
+            {/* Edit Actions */}
+            {isEditing && (
+              <div className="mt-4 flex gap-2">
+                <Button
+                  onClick={handleSaveEdit}
+                  className="bg-white text-black hover:bg-white/90"
+                >
+                  Save Changes
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  className="border-border text-white hover:bg-secondary"
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
 
             {/* Modal Footer */}
             <div className="mt-6 pt-4 border-t border-border text-xs text-muted-foreground">
