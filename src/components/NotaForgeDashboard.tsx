@@ -516,7 +516,7 @@ export function NotaForgeDashboard() {
           onClick={() => { setSelectedNote(null); setIsEditing(false); }}
         >
           <div 
-            className="w-[70%] max-h-[80vh] bg-black border border-border rounded-2xl p-6 overflow-y-auto"
+            className="w-[70%] h-[70vh] bg-black border border-border rounded-2xl p-6 overflow-y-auto flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
