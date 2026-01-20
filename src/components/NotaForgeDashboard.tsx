@@ -136,9 +136,24 @@ export function NotaForgeDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Top Navbar - 70% width centered */}
-      <header className="sticky top-0 z-50 bg-black pt-4 pb-2">
-        <div className="flex justify-center">
+      {/* Top Navbar with Made by Pratik on left */}
+      <header className="sticky top-0 z-50 bg-black pt-4 pb-2 px-4">
+        <div className="flex items-center justify-center gap-4">
+          {/* Left - Made by Pratik floating pill */}
+          <a
+            href="https://xpratik.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 flex items-center gap-2 hover:bg-secondary transition-colors"
+          >
+            <span className="text-sm text-muted-foreground">Made by Pratik</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-5 h-5">
+              <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
+              <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
+            </svg>
+          </a>
+
+          {/* Center - Main navbar */}
           <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-2 flex items-center justify-between">
             {/* Left side - SVG Icon */}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
@@ -155,8 +170,8 @@ export function NotaForgeDashboard() {
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         {/* Sidebar - Floating Panel */}
         <aside className="w-80 shrink-0 flex flex-col gap-4">
-          {/* Add Note Card */}
-          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col">
+          {/* Add Note Card - Increased height */}
+          <div className="bg-secondary/50 border border-border rounded-2xl p-5 flex flex-col flex-1">
             {/* Title Input */}
             <Input
               placeholder="Note Title"
@@ -165,12 +180,12 @@ export function NotaForgeDashboard() {
               className="mb-3 bg-secondary border-border text-white placeholder:text-muted-foreground"
             />
             
-            {/* Content Textarea */}
+            {/* Content Textarea - Increased height */}
             <Textarea
               placeholder="Your note (optional)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="mb-4 min-h-[100px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y"
+              className="mb-4 min-h-[140px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y flex-1"
             />
             
             {/* Attachment Buttons */}
@@ -183,8 +198,8 @@ export function NotaForgeDashboard() {
                   className="hidden"
                   disabled={isUploading}
                 />
-                <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'image' && fileUrl ? 'bg-secondary border-amber-500' : ''}`}>
-                  <Image size={18} className="text-amber-500" />
+                <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'image' && fileUrl ? 'bg-secondary border-white' : ''}`}>
+                  <Image size={18} className="text-white" />
                 </div>
               </label>
               
@@ -196,22 +211,22 @@ export function NotaForgeDashboard() {
                   className="hidden"
                   disabled={isUploading}
                 />
-                <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'file' && fileUrl ? 'bg-secondary border-amber-500' : ''}`}>
-                  <FileText size={18} className="text-amber-500" />
+                <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'file' && fileUrl ? 'bg-secondary border-white' : ''}`}>
+                  <FileText size={18} className="text-white" />
                 </div>
               </label>
               
               <button
                 type="button"
-                className={`p-2 rounded border border-border hover:bg-secondary transition-colors ${noteType === 'link' ? 'bg-secondary border-amber-500' : ''}`}
+                className={`p-2 rounded border border-border hover:bg-secondary transition-colors ${noteType === 'link' ? 'bg-secondary border-white' : ''}`}
                 onClick={() => setNoteType(noteType === 'link' ? 'text' : 'link')}
               >
-                <Link2 size={18} className="text-amber-500" />
+                <Link2 size={18} className="text-white" />
               </button>
             </div>
 
             {/* Upload Limits */}
-            <p className="text-xs text-amber-500 mb-4">
+            <p className="text-xs text-muted-foreground mb-4">
               Max 5 images, 5 files, 5MB each
             </p>
             
@@ -219,76 +234,63 @@ export function NotaForgeDashboard() {
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || isUploading}
-              className="w-full bg-amber-500 text-black hover:bg-amber-400 font-semibold rounded-lg"
+              className="w-full bg-white text-black hover:bg-white/90 font-semibold rounded-lg"
             >
               {isSubmitting ? (
                 <Loader2 className="animate-spin mr-2" size={16} />
               ) : null}
               Add Note
             </Button>
-          </div>
 
-          {/* Preview Panel - Shows when there's content to preview */}
-          {(fileUrl || (noteType === 'link' && linkUrl)) && (
-            <div className="bg-secondary/50 border border-border rounded-2xl p-4">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Preview</h3>
-              
-              {/* Link Input & Preview */}
-              {noteType === 'link' && (
-                <div className="space-y-2">
-                  <Input
-                    placeholder="https://example.com"
-                    value={linkUrl}
-                    onChange={(e) => setLinkUrl(e.target.value)}
-                    className="bg-secondary border-border text-white placeholder:text-muted-foreground"
-                  />
-                  {linkUrl && (
-                    <a 
-                      href={linkUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-amber-500 hover:underline text-sm break-all"
-                    >
-                      <ExternalLink size={14} className="shrink-0" />
-                      <span className="truncate">{linkUrl}</span>
-                    </a>
-                  )}
-                </div>
-              )}
+            {/* Preview Panel - Shows when there's content to preview */}
+            {(fileUrl || (noteType === 'link' && linkUrl)) && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Preview</h3>
+                
+                {/* Link Input & Preview */}
+                {noteType === 'link' && (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="https://example.com"
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      className="bg-secondary border-border text-white placeholder:text-muted-foreground"
+                    />
+                    {linkUrl && (
+                      <a 
+                        href={linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-white hover:underline text-sm break-all"
+                      >
+                        <ExternalLink size={14} className="shrink-0" />
+                        <span className="truncate">{linkUrl}</span>
+                      </a>
+                    )}
+                  </div>
+                )}
 
-              {/* Image Preview */}
-              {noteType === 'image' && fileUrl && (
-                <div className="space-y-2">
-                  <img 
-                    src={fileUrl} 
-                    alt="Preview"
-                    className="w-full h-32 object-cover rounded border border-border"
-                  />
-                  <p className="text-xs text-muted-foreground truncate">📷 {fileName}</p>
-                </div>
-              )}
+                {/* Image Preview */}
+                {noteType === 'image' && fileUrl && (
+                  <div className="space-y-2">
+                    <img 
+                      src={fileUrl} 
+                      alt="Preview"
+                      className="w-full h-32 object-cover rounded border border-border"
+                    />
+                    <p className="text-xs text-muted-foreground truncate">📷 {fileName}</p>
+                  </div>
+                )}
 
-              {/* File Preview */}
-              {noteType === 'file' && fileUrl && (
-                <div className="flex items-center gap-2 p-2 bg-secondary rounded border border-border">
-                  <FileText size={16} className="text-amber-500 shrink-0" />
-                  <span className="text-sm truncate">{fileName}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="mt-auto pt-4">
-            <a
-              href="https://xpratik.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-white transition-colors flex items-center gap-2"
-            >
-              Made by Pratik
-              <ExternalLink size={12} />
-            </a>
+                {/* File Preview */}
+                {noteType === 'file' && fileUrl && (
+                  <div className="flex items-center gap-2 p-2 bg-secondary rounded border border-border">
+                    <FileText size={16} className="text-white shrink-0" />
+                    <span className="text-sm truncate">{fileName}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </aside>
 
