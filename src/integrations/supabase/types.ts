@@ -107,7 +107,7 @@ export type Database = {
           note_type: string
           title: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           color?: string | null
@@ -124,7 +124,7 @@ export type Database = {
           note_type?: string
           title?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           color?: string | null
@@ -141,7 +141,7 @@ export type Database = {
           note_type?: string
           title?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
