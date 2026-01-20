@@ -448,7 +448,7 @@ export function NotaForgeDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-visible px-4 md:px-6 pt-0 pb-4 ml-[300px]">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-6 pt-0 pb-4 ml-[300px]">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin" size={32} />
