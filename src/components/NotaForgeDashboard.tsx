@@ -475,7 +475,7 @@ export function NotaForgeDashboard() {
               <p className="text-center px-4">No notes yet. Add your first note!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 overflow-hidden w-full">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 overflow-hidden w-full">
               {notes.map((note) => (
                 <div
                   key={note.id}
