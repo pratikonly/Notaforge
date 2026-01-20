@@ -226,7 +226,7 @@ export function NotaForgeDashboard() {
 
       <div className="flex flex-1 overflow-y-auto overflow-x-hidden p-2 pt-2 gap-4 relative">
         {/* Sidebar - Floating Panel */}
-        <aside className="w-72 shrink-0 flex flex-col ml-4 fixed top-[100px] left-0 z-40">
+        <aside className="w-72 shrink-0 flex flex-col ml-4 fixed top-[88px] left-0 z-40">
           {/* Add Note Card */}
           <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col min-h-[540px]">
             {/* Title Input */}
@@ -375,7 +375,7 @@ export function NotaForgeDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-visible p-4 md:p-6 ml-[300px]">
+        <main className="flex-1 overflow-visible px-4 md:px-6 pt-0 pb-4 ml-[300px]">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin" size={32} />
