@@ -37,8 +37,8 @@ export function NotaForgeDashboard() {
   const [content, setContent] = useState('');
   const [noteType, setNoteType] = useState<NoteType>('text');
   const [linkUrl, setLinkUrl] = useState('');
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileUrls, setFileUrls] = useState<string[]>([]);
+  const [fileNames, setFileNames] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -54,42 +54,65 @@ export function NotaForgeDashboard() {
     setContent('');
     setNoteType('text');
     setLinkUrl('');
-    setFileUrl(null);
-    setFileName(null);
+    setFileUrls([]);
+    setFileNames([]);
   };
 
-  // Process file upload (shared by input, drag & drop, and paste)
-  const processFileUpload = useCallback(async (file: File) => {
-    const isImage = file.type.startsWith('image/');
+  // Process multiple file uploads (up to 5 at once)
+  const processFileUpload = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
+    
+    // Limit to 5 files max
+    const filesToUpload = files.slice(0, 5 - fileUrls.length);
+    if (filesToUpload.length === 0) {
+      alert('Maximum 5 images allowed');
+      return;
+    }
+    
+    const isImage = filesToUpload[0].type.startsWith('image/');
     const type: 'image' | 'file' = isImage ? 'image' : 'file';
     
     // Check file size based on type (10MB for images, 50MB for files)
     const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
     const maxSizeLabel = type === 'image' ? '10MB' : '50MB';
     
-    if (file.size > maxSize) {
-      alert(`File size must be less than ${maxSizeLabel}`);
-      return;
+    // Validate all files
+    for (const file of filesToUpload) {
+      if (file.size > maxSize) {
+        alert(`File "${file.name}" exceeds ${maxSizeLabel} limit`);
+        return;
+      }
     }
 
     setIsUploading(true);
     setUploadSuccess(false);
-    const url = await uploadFile(file);
+    
+    const uploadedUrls: string[] = [];
+    const uploadedNames: string[] = [];
+    
+    for (const file of filesToUpload) {
+      const url = await uploadFile(file);
+      if (url) {
+        uploadedUrls.push(url);
+        uploadedNames.push(file.name);
+      }
+    }
+    
     setIsUploading(false);
 
-    if (url) {
-      setFileUrl(url);
-      setFileName(file.name);
+    if (uploadedUrls.length > 0) {
+      setFileUrls(prev => [...prev, ...uploadedUrls]);
+      setFileNames(prev => [...prev, ...uploadedNames]);
       setNoteType(type);
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     }
-  }, [uploadFile]);
+  }, [uploadFile, fileUrls.length]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    await processFileUpload(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    await processFileUpload(files);
   };
 
   // Drag and drop handlers
@@ -110,9 +133,9 @@ export function NotaForgeDashboard() {
     e.stopPropagation();
     setIsDragging(false);
     
-    const files = e.dataTransfer.files;
+    const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      await processFileUpload(files[0]);
+      await processFileUpload(files);
     }
   }, [processFileUpload]);
 
@@ -122,15 +145,19 @@ export function NotaForgeDashboard() {
       const items = e.clipboardData?.items;
       if (!items) return;
       
+      const files: File[] = [];
       for (const item of items) {
         if (item.kind === 'file') {
           const file = item.getAsFile();
           if (file) {
-            e.preventDefault();
-            await processFileUpload(file);
-            break;
+            files.push(file);
           }
         }
+      }
+      
+      if (files.length > 0) {
+        e.preventDefault();
+        await processFileUpload(files);
       }
     };
 
@@ -139,10 +166,18 @@ export function NotaForgeDashboard() {
   }, [processFileUpload]);
 
   const clearAttachment = () => {
-    setFileUrl(null);
-    setFileName(null);
+    setFileUrls([]);
+    setFileNames([]);
     setNoteType('text');
     setLinkUrl('');
+  };
+
+  const removeImage = (index: number) => {
+    setFileUrls(prev => prev.filter((_, i) => i !== index));
+    setFileNames(prev => prev.filter((_, i) => i !== index));
+    if (fileUrls.length <= 1) {
+      setNoteType('text');
+    }
   };
 
   const openEditModal = (note: Note) => {
@@ -169,20 +204,35 @@ export function NotaForgeDashboard() {
   };
 
   const handleSubmit = async () => {
-    if (!title.trim() && !content.trim() && !fileUrl && !linkUrl.trim()) {
+    if (!title.trim() && !content.trim() && fileUrls.length === 0 && !linkUrl.trim()) {
       return;
     }
 
     setIsSubmitting(true);
     
-    await createNote({
-      title: title.trim() || 'Untitled',
-      content: content.trim() || null,
-      note_type: noteType,
-      file_url: fileUrl,
-      file_name: fileName,
-      link_url: linkUrl.trim() || null,
-    });
+    // For multiple images, create separate notes for each or store first one
+    // For now, create one note per image (or single note for other types)
+    if (noteType === 'image' && fileUrls.length > 0) {
+      for (let i = 0; i < fileUrls.length; i++) {
+        await createNote({
+          title: fileUrls.length > 1 ? `${title.trim() || 'Untitled'} (${i + 1})` : (title.trim() || 'Untitled'),
+          content: content.trim() || null,
+          note_type: noteType,
+          file_url: fileUrls[i],
+          file_name: fileNames[i],
+          link_url: null,
+        });
+      }
+    } else {
+      await createNote({
+        title: title.trim() || 'Untitled',
+        content: content.trim() || null,
+        note_type: noteType,
+        file_url: fileUrls[0] || null,
+        file_name: fileNames[0] || null,
+        link_url: linkUrl.trim() || null,
+      });
+    }
 
     resetForm();
     setIsSubmitting(false);
@@ -295,11 +345,12 @@ export function NotaForgeDashboard() {
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={(e) => handleFileUpload(e, 'image')}
             className="hidden"
-            disabled={isUploading}
+            disabled={isUploading || fileUrls.length >= 5}
           />
-          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'image' && fileUrl ? 'bg-secondary border-white' : ''}`}>
+          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'image' && fileUrls.length > 0 ? 'bg-secondary border-white' : ''} ${fileUrls.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}>
             <Image size={18} className="text-white" />
           </div>
         </label>
@@ -312,7 +363,7 @@ export function NotaForgeDashboard() {
             className="hidden"
             disabled={isUploading}
           />
-          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'file' && fileUrl ? 'bg-secondary border-white' : ''}`}>
+          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'file' && fileUrls.length > 0 ? 'bg-secondary border-white' : ''}`}>
             <FileText size={18} className="text-white" />
           </div>
         </label>
@@ -339,7 +390,7 @@ export function NotaForgeDashboard() {
       {/* Upload Limits & Success */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs text-muted-foreground">
-          Images: 10MB max | Files: 50MB max
+          Max 5 images | 10MB each | Files: 50MB
         </p>
         {uploadSuccess && (
           <span className="text-xs text-green-500 flex items-center gap-1">
@@ -363,15 +414,17 @@ export function NotaForgeDashboard() {
       </Button>
 
       {/* Preview Panel - Shows under Add Note button when there's content */}
-      {(fileUrl || (noteType === 'link' && linkUrl)) && (
+      {(fileUrls.length > 0 || (noteType === 'link' && linkUrl)) && (
         <div className="mt-4 pt-4 border-t border-border">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-muted-foreground">Preview</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Preview {fileUrls.length > 1 && `(${fileUrls.length} images)`}
+            </h3>
             <button
               onClick={clearAttachment}
-              className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+              className="text-xs text-destructive hover:text-destructive/80 flex items-center gap-1"
             >
-              <X size={12} /> Remove
+              <X size={12} /> Remove All
             </button>
           </div>
           
@@ -388,29 +441,41 @@ export function NotaForgeDashboard() {
             </a>
           )}
 
-          {/* Image Preview */}
-          {noteType === 'image' && fileUrl && (
-            <div className="space-y-2">
-              <img 
-                src={fileUrl} 
-                alt="Preview"
-                className="w-full h-32 object-cover rounded border border-border"
-              />
-              <p className="text-xs text-muted-foreground truncate">📷 {fileName}</p>
+          {/* Multi-Image Preview - Mobile Optimized Grid */}
+          {noteType === 'image' && fileUrls.length > 0 && (
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+              {fileUrls.map((url, index) => (
+                <div key={index} className="relative group">
+                  <img 
+                    src={url} 
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-14 sm:h-20 object-cover rounded border border-border"
+                  />
+                  <button
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-destructive rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={10} className="text-white" />
+                  </button>
+                  <span className="absolute bottom-0.5 right-0.5 text-[8px] bg-background/80 px-1 rounded text-muted-foreground">
+                    {index + 1}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
           {/* File Preview */}
-          {noteType === 'file' && fileUrl && (
+          {noteType === 'file' && fileUrls.length > 0 && (
             <div className="flex items-center gap-2 p-2 bg-secondary rounded border border-border">
-              {fileName?.toLowerCase().endsWith('.pdf') ? (
-                <div className="w-6 h-7 bg-red-600 rounded flex items-center justify-center">
+              {fileNames[0]?.toLowerCase().endsWith('.pdf') ? (
+                <div className="w-6 h-7 bg-destructive rounded flex items-center justify-center">
                   <span className="text-white text-[8px] font-bold">PDF</span>
                 </div>
               ) : (
                 <FileText size={16} className="text-white shrink-0" />
               )}
-              <span className="text-sm truncate">{fileName}</span>
+              <span className="text-sm truncate">{fileNames[0]}</span>
             </div>
           )}
         </div>
@@ -420,9 +485,9 @@ export function NotaForgeDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Top Navbar - Responsive */}
+      {/* Top Navbar - Responsive with symmetry */}
       <header className="sticky top-0 z-50 bg-black pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
-        <div className="flex items-center justify-center gap-2 sm:gap-3">
+        <div className="flex items-center justify-between">
           {/* Left - Pratik Logo (mobile/tablet: just logo, desktop: logo + text) */}
           <a
             href="https://xpratik.vercel.app/"
@@ -438,8 +503,8 @@ export function NotaForgeDashboard() {
             <span className="hidden lg:inline text-sm text-muted-foreground">Made by Pratik</span>
           </a>
 
-          {/* Center - Main navbar */}
-          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 sm:px-6 py-2 sm:py-3 flex items-center justify-between gap-4 sm:gap-8 lg:gap-16 lg:px-12">
+          {/* Center - Main navbar (increased width on mobile/tablet) */}
+          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 sm:px-8 lg:px-12 py-2 sm:py-3 flex items-center justify-between gap-8 sm:gap-12 lg:gap-16">
             {/* Left side - SVG Icon */}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-6 h-6 sm:w-8 sm:h-8">
               <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
@@ -449,6 +514,9 @@ export function NotaForgeDashboard() {
             {/* Right side - Name */}
             <span className="text-sm sm:text-base font-semibold tracking-tight">NotaForge</span>
           </div>
+
+          {/* Right - Blank spacer for symmetry (matches logo width) */}
+          <div className="w-9 sm:w-10 lg:w-[120px] shrink-0"></div>
         </div>
       </header>
 
