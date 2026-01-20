@@ -138,7 +138,7 @@ export function NotaForgeDashboard() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Top Navbar with Made by Pratik on left */}
       <header className="sticky top-0 z-50 bg-black pt-4 pb-2 px-4">
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center">
           {/* Left - Made by Pratik */}
           <a
             href="https://xpratik.vercel.app/"
@@ -155,24 +155,26 @@ export function NotaForgeDashboard() {
           </a>
 
           {/* Center - Main navbar */}
-          <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
-            {/* Left side - SVG Icon */}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
-              <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
-              <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
-            </svg>
-            
-            {/* Right side - Name */}
-            <span className="text-base font-semibold tracking-tight">NotaForge</span>
+          <div className="flex-1 flex justify-center">
+            <div className="w-[50%] bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 py-3 flex items-center justify-between">
+              {/* Left side - SVG Icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
+                <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
+                <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
+              </svg>
+              
+              {/* Right side - Name */}
+              <span className="text-base font-semibold tracking-tight">NotaForge</span>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden p-2 pt-2 gap-4">
         {/* Sidebar - Floating Panel */}
-        <aside className="w-80 shrink-0 flex flex-col">
+        <aside className="w-72 shrink-0 flex flex-col ml-4">
           {/* Add Note Card */}
-          <div className="bg-secondary/50 border border-border rounded-2xl p-5 flex flex-col flex-1">
+          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col max-h-[calc(100vh-120px)]">
             {/* Title Input */}
             <Input
               placeholder="Note Title"
