@@ -152,12 +152,11 @@ export function NotaForgeDashboard() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar - Always visible */}
-        <aside className="w-80 border-r border-border bg-black flex flex-col shrink-0">
-          <div className="p-4 flex-1 overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">Add Note</h2>
-            
+      <div className="flex flex-1 overflow-hidden p-4 gap-4">
+        {/* Sidebar - Floating Panel */}
+        <aside className="w-80 shrink-0 flex flex-col gap-4">
+          {/* Add Note Card */}
+          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col">
             {/* Title Input */}
             <Input
               placeholder="Note Title"
@@ -171,12 +170,12 @@ export function NotaForgeDashboard() {
               placeholder="Your note (optional)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="mb-4 min-h-[120px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-none"
+              className="mb-4 min-h-[100px] bg-secondary border-border text-white placeholder:text-muted-foreground resize-y"
             />
             
             {/* Attachment Buttons */}
-            <div className="flex gap-2 mb-3">
-              <label className="flex-1">
+            <div className="flex gap-2 mb-2">
+              <label>
                 <input
                   type="file"
                   accept="image/*"
@@ -184,21 +183,12 @@ export function NotaForgeDashboard() {
                   className="hidden"
                   disabled={isUploading}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-border hover:bg-secondary"
-                  disabled={isUploading}
-                  asChild
-                >
-                  <span className="cursor-pointer flex items-center justify-center gap-2">
-                    <Image size={16} />
-                    Image
-                  </span>
-                </Button>
+                <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'image' && fileUrl ? 'bg-secondary border-amber-500' : ''}`}>
+                  <Image size={18} className="text-amber-500" />
+                </div>
               </label>
               
-              <label className="flex-1">
+              <label>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx,.txt,.zip,.rar"
@@ -206,58 +196,30 @@ export function NotaForgeDashboard() {
                   className="hidden"
                   disabled={isUploading}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-border hover:bg-secondary"
-                  disabled={isUploading}
-                  asChild
-                >
-                  <span className="cursor-pointer flex items-center justify-center gap-2">
-                    <FileText size={16} />
-                    File
-                  </span>
-                </Button>
+                <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'file' && fileUrl ? 'bg-secondary border-amber-500' : ''}`}>
+                  <FileText size={18} className="text-amber-500" />
+                </div>
               </label>
               
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                className={`flex-1 border-border hover:bg-secondary ${noteType === 'link' ? 'bg-secondary' : ''}`}
+                className={`p-2 rounded border border-border hover:bg-secondary transition-colors ${noteType === 'link' ? 'bg-secondary border-amber-500' : ''}`}
                 onClick={() => setNoteType(noteType === 'link' ? 'text' : 'link')}
               >
-                <Link2 size={16} />
-                Link
-              </Button>
+                <Link2 size={18} className="text-amber-500" />
+              </button>
             </div>
 
-            {/* Link Input */}
-            {noteType === 'link' && (
-              <Input
-                placeholder="https://example.com"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                className="mb-3 bg-secondary border-border text-white placeholder:text-muted-foreground"
-              />
-            )}
-
-            {/* File Preview */}
-            {fileUrl && (
-              <div className="mb-3 p-2 bg-secondary rounded border border-border text-sm truncate">
-                📎 {fileName}
-              </div>
-            )}
-
             {/* Upload Limits */}
-            <p className="text-xs text-destructive mb-4">
-              Max 5MB per file
+            <p className="text-xs text-amber-500 mb-4">
+              Max 5 images, 5 files, 5MB each
             </p>
             
             {/* Add Note Button */}
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || isUploading}
-              className="w-full bg-white text-black hover:bg-white/90 font-semibold"
+              className="w-full bg-amber-500 text-black hover:bg-amber-400 font-semibold rounded-lg"
             >
               {isSubmitting ? (
                 <Loader2 className="animate-spin mr-2" size={16} />
@@ -266,8 +228,58 @@ export function NotaForgeDashboard() {
             </Button>
           </div>
 
+          {/* Preview Panel - Shows when there's content to preview */}
+          {(fileUrl || (noteType === 'link' && linkUrl)) && (
+            <div className="bg-secondary/50 border border-border rounded-2xl p-4">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Preview</h3>
+              
+              {/* Link Input & Preview */}
+              {noteType === 'link' && (
+                <div className="space-y-2">
+                  <Input
+                    placeholder="https://example.com"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    className="bg-secondary border-border text-white placeholder:text-muted-foreground"
+                  />
+                  {linkUrl && (
+                    <a 
+                      href={linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-amber-500 hover:underline text-sm break-all"
+                    >
+                      <ExternalLink size={14} className="shrink-0" />
+                      <span className="truncate">{linkUrl}</span>
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Image Preview */}
+              {noteType === 'image' && fileUrl && (
+                <div className="space-y-2">
+                  <img 
+                    src={fileUrl} 
+                    alt="Preview"
+                    className="w-full h-32 object-cover rounded border border-border"
+                  />
+                  <p className="text-xs text-muted-foreground truncate">📷 {fileName}</p>
+                </div>
+              )}
+
+              {/* File Preview */}
+              {noteType === 'file' && fileUrl && (
+                <div className="flex items-center gap-2 p-2 bg-secondary rounded border border-border">
+                  <FileText size={16} className="text-amber-500 shrink-0" />
+                  <span className="text-sm truncate">{fileName}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Footer */}
-          <div className="p-4 border-t border-border">
+          <div className="mt-auto pt-4">
             <a
               href="https://xpratik.vercel.app/"
               target="_blank"
