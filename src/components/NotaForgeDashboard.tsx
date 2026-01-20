@@ -10,7 +10,9 @@ import {
   Trash2, 
   Loader2,
   ExternalLink,
-  Download
+  Download,
+  Pencil,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -26,6 +28,7 @@ export function NotaForgeDashboard() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   const resetForm = () => {
     setTitle('');
@@ -321,23 +324,38 @@ export function NotaForgeDashboard() {
               {notes.map((note) => (
                 <div
                   key={note.id}
-                  className="bg-black border border-border rounded-lg p-4 flex flex-col gap-3 hover:border-muted-foreground/50 transition-colors"
+                  onClick={() => setSelectedNote(note)}
+                  className="bg-black border border-border rounded-lg p-4 flex flex-col gap-3 hover:border-muted-foreground/50 transition-colors cursor-pointer h-[200px] w-full"
                 >
                   {/* Card Header */}
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-white truncate flex-1">
                       {note.title}
                     </h3>
-                    <button
-                      onClick={() => handleDelete(note.id)}
-                      className="text-destructive hover:text-destructive/80 transition-colors shrink-0"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedNote(note);
+                        }}
+                        className="text-muted-foreground hover:text-white transition-colors shrink-0"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(note.id);
+                        }}
+                        className="text-destructive hover:text-destructive/80 transition-colors shrink-0"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Card Content */}
-                  <div className="flex-1 min-h-0">
+                  <div className="flex-1 min-h-0 overflow-hidden">
                     {renderNoteContent(note)}
                   </div>
                   
@@ -351,6 +369,78 @@ export function NotaForgeDashboard() {
           )}
         </main>
       </div>
+
+      {/* Note Popup Modal */}
+      {selectedNote && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-blue-900/10 backdrop-blur-sm"
+          onClick={() => setSelectedNote(null)}
+        >
+          <div 
+            className="w-[70%] max-h-[80vh] bg-black border border-border rounded-2xl p-6 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <h2 className="text-xl font-bold text-white">{selectedNote.title}</h2>
+              <button
+                onClick={() => setSelectedNote(null)}
+                className="text-muted-foreground hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="space-y-4">
+              {/* Text Content */}
+              {selectedNote.content && (
+                <p className="text-muted-foreground whitespace-pre-wrap">{selectedNote.content}</p>
+              )}
+
+              {/* Image */}
+              {selectedNote.note_type === 'image' && selectedNote.file_url && (
+                <img 
+                  src={selectedNote.file_url} 
+                  alt={selectedNote.title}
+                  className="w-full max-h-[400px] object-contain rounded border border-border"
+                />
+              )}
+
+              {/* Link */}
+              {selectedNote.note_type === 'link' && selectedNote.link_url && (
+                <a 
+                  href={selectedNote.link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-white hover:underline break-all p-3 bg-secondary rounded border border-border"
+                >
+                  <ExternalLink size={18} className="shrink-0" />
+                  <span>{selectedNote.link_url}</span>
+                </a>
+              )}
+
+              {/* File */}
+              {(selectedNote.note_type === 'file' || selectedNote.note_type === 'pdf') && selectedNote.file_url && (
+                <a 
+                  href={selectedNote.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border"
+                >
+                  <Download size={18} className="shrink-0" />
+                  <span>{selectedNote.file_name || 'Download file'}</span>
+                </a>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="mt-6 pt-4 border-t border-border text-xs text-muted-foreground">
+              Created: {formatTimestamp(selectedNote.created_at)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
