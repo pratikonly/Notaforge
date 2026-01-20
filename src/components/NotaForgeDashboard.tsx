@@ -527,7 +527,7 @@ export function NotaForgeDashboard() {
             href="https://xpratik.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 items-center hover:bg-secondary transition-colors shrink-0 ml-8 sm:ml-16 md:ml-24"
+            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 items-center hover:bg-secondary transition-colors shrink-0 ml-10 sm:ml-16 md:ml-24"
           >
             <img 
               src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
@@ -536,8 +536,8 @@ export function NotaForgeDashboard() {
             />
           </a>
 
-          {/* Center - Main navbar (increased width for tablet) */}
-          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 sm:px-10 md:px-14 py-2 sm:py-3 flex items-center justify-between gap-8 sm:gap-14 md:gap-20">
+          {/* Center - Main navbar (mobile: shifted left, tablet: shifted right) */}
+          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-5 sm:px-10 md:px-16 py-2 sm:py-3 flex items-center justify-between gap-6 sm:gap-14 md:gap-24 -ml-2 sm:ml-0 md:mr-[-8px]">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-6 h-6 sm:w-8 sm:h-8">
               <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
               <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
