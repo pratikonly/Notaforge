@@ -490,19 +490,19 @@ export function NotaForgeDashboard() {
         
         {/* DESKTOP LAYOUT (lg+) - Original layout restored */}
         <div className="hidden lg:flex items-center">
-          {/* Left - Made by Pratik badge with margin */}
+          {/* Left - Made by Pratik badge with margin (text first, then logo) */}
           <a
             href="https://xpratik.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-4 py-2 items-center gap-2 hover:bg-secondary transition-colors ml-16"
           >
+            <span className="text-sm text-muted-foreground">Made by Pratik</span>
             <img 
               src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
               alt="Pratik Logo"
               className="w-6 h-6 object-contain"
             />
-            <span className="text-sm text-muted-foreground">Made by Pratik</span>
           </a>
 
           {/* Center - Main navbar with w-[60%] */}
@@ -522,12 +522,12 @@ export function NotaForgeDashboard() {
 
         {/* MOBILE/TABLET LAYOUT (< lg) - Symmetric layout */}
         <div className="flex lg:hidden items-center justify-between">
-          {/* Left - Logo only */}
+          {/* Left - Logo with margin to shift right */}
           <a
             href="https://xpratik.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 items-center hover:bg-secondary transition-colors shrink-0"
+            className="flex bg-secondary/80 backdrop-blur-sm border border-border rounded-full p-2 items-center hover:bg-secondary transition-colors shrink-0 ml-2 sm:ml-4"
           >
             <img 
               src="https://raw.githubusercontent.com/pratik11500/PratikPortfolio/refs/heads/replit-agent/assets/images/logo.png" 
@@ -536,8 +536,8 @@ export function NotaForgeDashboard() {
             />
           </a>
 
-          {/* Center - Main navbar (increased width) */}
-          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 sm:px-8 py-2 sm:py-3 flex items-center justify-between gap-8 sm:gap-12">
+          {/* Center - Main navbar (increased width for tablet) */}
+          <div className="bg-secondary/80 backdrop-blur-sm border border-border rounded-full px-6 sm:px-10 md:px-14 py-2 sm:py-3 flex items-center justify-between gap-8 sm:gap-14 md:gap-20">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-6 h-6 sm:w-8 sm:h-8">
               <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
               <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
@@ -546,7 +546,7 @@ export function NotaForgeDashboard() {
           </div>
 
           {/* Right - Blank spacer for symmetry */}
-          <div className="w-9 sm:w-10 shrink-0"></div>
+          <div className="w-11 sm:w-14 md:w-16 shrink-0"></div>
         </div>
       </header>
 
