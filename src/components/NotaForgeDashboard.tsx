@@ -139,16 +139,28 @@ export function NotaForgeDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-black border-b border-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-secondary rounded transition-colors"
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          <h1 className="text-xl font-bold tracking-tight">NotaForge v2</h1>
+      {/* Top Navbar - 70% width on left */}
+      <header className="sticky top-0 z-50 bg-black">
+        <div className="w-[70%] border-b border-r border-border px-4 py-3 flex items-center justify-between">
+          {/* Left side - SVG Icon */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-secondary rounded transition-colors"
+            >
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8">
+              <rect width="100" height="100" rx="20" fill="#000000" stroke="#ffffff" strokeWidth="4"/>
+              <path d="M30 70 L50 30 L70 70" fill="none" stroke="#ffffff" strokeWidth="6" strokeLinecap="round"/>
+            </svg>
+          </div>
+          
+          {/* Right side - Name */}
+          <div className="flex items-baseline gap-1">
+            <span className="text-xl font-bold tracking-tight">NotaForge</span>
+            <span className="text-xs text-muted-foreground">v2</span>
+          </div>
         </div>
       </header>
 
