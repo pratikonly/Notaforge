@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { usePublicNotes, Note, NoteType } from '@/hooks/usePublicNotes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,8 @@ import {
   Pencil,
   X,
   FileIcon,
-  Check
+  Check,
+  Upload
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -35,6 +36,7 @@ export function NotaForgeDashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   const resetForm = () => {
     setTitle('');
@@ -45,10 +47,11 @@ export function NotaForgeDashboard() {
     setFileName(null);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Process file upload (shared by input, drag & drop, and paste)
+  const processFileUpload = useCallback(async (file: File) => {
+    const isImage = file.type.startsWith('image/');
+    const type: 'image' | 'file' = isImage ? 'image' : 'file';
+    
     // Check file size based on type (10MB for images, 50MB for files)
     const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
     const maxSizeLabel = type === 'image' ? '10MB' : '50MB';
@@ -70,7 +73,59 @@ export function NotaForgeDashboard() {
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     }
+  }, [uploadFile]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFileUpload(file);
   };
+
+  // Drag and drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await processFileUpload(files[0]);
+    }
+  }, [processFileUpload]);
+
+  // Ctrl+V paste handler
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            await processFileUpload(file);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [processFileUpload]);
 
   const clearAttachment = () => {
     setFileUrl(null);
@@ -227,8 +282,26 @@ export function NotaForgeDashboard() {
       <div className="flex flex-1 overflow-y-auto overflow-x-hidden p-2 pt-2 gap-4 relative">
         {/* Sidebar - Floating Panel */}
         <aside className="w-72 shrink-0 flex flex-col ml-4 fixed top-[88px] left-0 z-40">
-          {/* Add Note Card */}
-          <div className="bg-secondary/50 border border-border rounded-2xl p-4 flex flex-col min-h-[580px]">
+          {/* Add Note Card with Drag & Drop */}
+          <div 
+            className={`bg-secondary/50 border rounded-2xl p-4 flex flex-col min-h-[580px] transition-all relative ${
+              isDragging 
+                ? 'border-primary border-2 bg-primary/10' 
+                : 'border-border'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {/* Drop Overlay */}
+            {isDragging && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-2xl z-10 pointer-events-none">
+                <div className="flex flex-col items-center gap-2 text-primary">
+                  <Upload size={32} />
+                  <span className="text-sm font-medium">Drop file here</span>
+                </div>
+              </div>
+            )}
             {/* Title Input */}
             <Input
               placeholder="Note Title"
