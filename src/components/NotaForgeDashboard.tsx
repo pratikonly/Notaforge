@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { NoteFormPanel } from '@/components/NoteFormPanel';
+import { BlurredBlobBackground } from '@/components/BlurredBlobBackground';
 import { 
   Sheet,
   SheetContent,
@@ -302,7 +303,9 @@ export function NotaForgeDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative">
+      {/* Animated blob background */}
+      <BlurredBlobBackground />
       {/* Top Navbar */}
       <header className="sticky top-0 z-50 bg-black pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
         
