@@ -472,7 +472,7 @@ export function NotaForgeDashboard() {
 
       {/* Mobile Sheet for Note Creation */}
       <Sheet open={mobileFormOpen} onOpenChange={setMobileFormOpen}>
-        <SheetContent side="bottom" className="h-[85vh] bg-black border-border rounded-t-2xl p-4 flex flex-col">
+        <SheetContent side="bottom" className="h-[85vh] bg-secondary/70 backdrop-blur-xl border-t-2 border-x-2 animate-border-glow rounded-t-2xl p-4 flex flex-col">
           <SheetHeader className="mb-4">
             <SheetTitle className="text-white text-left">Add New Note</SheetTitle>
           </SheetHeader>
@@ -505,14 +505,14 @@ export function NotaForgeDashboard() {
         </SheetContent>
       </Sheet>
 
-      {/* Note Popup Modal - Responsive */}
+      {/* Note Popup Modal - Responsive with animation */}
       {selectedNote && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-blue-900/10 backdrop-blur-sm p-2 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
           onClick={() => { setSelectedNote(null); setIsEditing(false); }}
         >
           <div 
-            className="w-full sm:w-[90%] md:w-[85%] lg:w-[70%] h-[90vh] sm:h-[85vh] lg:h-[70vh] max-w-4xl bg-black border border-border rounded-2xl p-4 sm:p-6 overflow-x-hidden overflow-y-auto flex flex-col"
+            className="w-full sm:w-[90%] md:w-[85%] lg:w-[70%] h-[90vh] sm:h-[85vh] lg:h-[70vh] max-w-4xl bg-secondary/70 backdrop-blur-xl border-2 rounded-2xl p-4 sm:p-6 overflow-x-hidden overflow-y-auto flex flex-col animate-scale-in animate-border-glow"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
