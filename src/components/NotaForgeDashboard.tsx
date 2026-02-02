@@ -307,7 +307,7 @@ export function NotaForgeDashboard() {
       {/* Animated blob background */}
       <BlurredBlobBackground />
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 bg-black pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
+      <header className="sticky top-0 z-50 bg-transparent pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
         
         {/* DESKTOP LAYOUT (lg+) - Original layout restored */}
         <div className="hidden lg:flex items-center">
@@ -416,7 +416,7 @@ export function NotaForgeDashboard() {
                 <div
                   key={note.id}
                   onClick={() => setSelectedNote(note)}
-                  className="bg-black border border-border rounded-lg p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:border-muted-foreground/50 transition-colors cursor-pointer h-[240px] sm:h-[280px] w-full"
+                  className="bg-secondary/60 backdrop-blur-md border-2 rounded-2xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:bg-secondary/80 transition-all cursor-pointer h-[240px] sm:h-[280px] w-full animate-border-glow"
                 >
                   {/* Card Header */}
                   <div className="flex items-start justify-between gap-2">
