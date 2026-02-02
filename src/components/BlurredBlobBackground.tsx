@@ -1,11 +1,11 @@
 export function BlurredBlobBackground() {
   return (
-    <div className="fixed inset-0 pointer-events-none">
-      {/* SVG Blobs Layer */}
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {/* SVG Blobs Layer - Full coverage */}
       <svg 
-        className="fixed inset-0 w-full h-full z-0"
+        className="fixed inset-0 w-[200%] h-[200%] -left-1/2 -top-1/2 z-0"
         preserveAspectRatio="xMidYMid slice" 
-        viewBox="10 10 80 80"
+        viewBox="0 0 100 100"
       >
         <defs>
           <radialGradient id="Gradient1" cx="50%" cy="50%" fx="10%" fy="50%" r=".5">
@@ -36,17 +36,21 @@ export function BlurredBlobBackground() {
         <rect fill="url(#Gradient4)" className="blob-in-bottom" width="100%" height="100%" />
       </svg>
 
-      {/* Blur Layer */}
+      {/* Heavy Blur Layer */}
       <div 
-        className="fixed inset-0 z-[1] backdrop-blur-[60px] saturate-[140%]"
-        style={{ background: 'rgba(0, 0, 0, 0.25)' }}
+        className="fixed inset-0 z-[1]"
+        style={{ 
+          backdropFilter: 'blur(100px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(100px) saturate(150%)',
+          background: 'rgba(0, 0, 0, 0.4)' 
+        }}
       />
 
-      {/* Vignette Fade Layer */}
+      {/* Darker Vignette Fade Layer */}
       <div 
         className="fixed inset-0 z-[2]"
         style={{
-          background: 'radial-gradient(circle at center, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 65%, rgba(0,0,0,0.95) 100%)'
+          background: 'radial-gradient(circle at center, rgba(0,0,0,0.2) 20%, rgba(0,0,0,0.7) 55%, rgba(0,0,0,0.98) 100%)'
         }}
       />
     </div>
