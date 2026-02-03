@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { NoteType } from '@/hooks/usePublicNotes';
+import { NoteType } from '@/hooks/useNotes';
 
 interface NoteFormPanelProps {
   inSheet?: boolean;
