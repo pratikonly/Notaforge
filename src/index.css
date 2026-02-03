@@ -132,22 +132,22 @@
 }
 
 .blob-out-top {
-  animation: blob-rotate 40s linear infinite;
+  animation: blob-rotate 20s linear infinite;
   transform-origin: 13px 25px;
 }
 
 .blob-in-top {
-  animation: blob-rotate 30s linear infinite;
+  animation: blob-rotate 10s linear infinite;
   transform-origin: 13px 25px;
 }
 
 .blob-out-bottom {
-  animation: blob-rotate 50s linear infinite;
+  animation: blob-rotate 25s linear infinite;
   transform-origin: 84px 93px;
 }
 
 .blob-in-bottom {
-  animation: blob-rotate 35s linear infinite;
+  animation: blob-rotate 15s linear infinite;
   transform-origin: 84px 93px;
 }
 
