@@ -1,87 +1,98 @@
 
-# Blurred Blob Background Implementation
+
+# Background Animation & Performance Optimization
 
 ## Overview
-Add an animated, blurred blob background effect to the NotaForge website. The effect consists of:
-- Animated SVG blobs with rotating gradient shapes
-- A heavy blur layer using backdrop-filter
-- A black vignette/fade effect around the edges
-
-This creates a subtle, dynamic background while keeping the pure black and white theme intact.
+Update the blurred blob background to match the provided HTML code exactly, including colors, animation style, and speeds. Also optimize for better performance.
 
 ---
 
-## Implementation Approach
+## Changes Summary
 
-### 1. Create a Background Component
-Create a new reusable component `BlurredBlobBackground.tsx` that contains:
-- The animated SVG with rotating gradient blobs
-- The blur layer overlay
-- The vignette/fade effect
+### 1. Update BlurredBlobBackground.tsx - Complete Rewrite
 
-This component will be positioned as a fixed background layer behind all content.
+Replace the current rect-based gradient implementation with path-based blobs matching the reference:
 
-### 2. Update NotaForgeDashboard
-Integrate the background component into the main dashboard, ensuring:
-- The background stays fixed behind all scrollable content
-- All existing UI elements remain on top with proper z-indexing
-- Performance is optimized (animations use CSS transforms for GPU acceleration)
+**New Colors (from reference)**:
+- Purple: `#9b5de5`
+- Pink: `#f15bb5`  
+- Blue: `#00bbf9`
+- Cyan: `#00f5d4`
+
+**Key Changes**:
+- Use `<path>` elements instead of `<rect>` elements for organic blob shapes
+- Add SVG glow filter (`<feGaussianBlur>` + `<feColorMatrix>`) for the glow effect
+- Use `viewBox="10 10 80 80"` instead of `0 0 100 100`
+- Remove the 200% sizing (major performance improvement)
+- Use standard 100% width/height for the SVG
+
+**Animation Speeds** (matching reference):
+- out-top: 20s
+- in-top: 10s
+- out-bottom: 25s
+- in-bottom: 15s
+
+**Blur Layer**: Reduce from 100px to 60px, saturation from 150% to 140%
+
+**Vignette**: Match reference values (0% at 30%, 60% at 65%, 95% at 100%)
 
 ---
 
-## Visual Effect Breakdown
+### 2. Update index.css - Restore Animation Speeds
+
+Update the blob animation speeds to match the reference:
 
 ```text
-Layer Structure (bottom to top):
-┌─────────────────────────────────────┐
-│ SVG Blobs (z-index: 0)              │  ← Animated rotating gradients
-├─────────────────────────────────────┤
-│ Blur Layer (z-index: 1)             │  ← backdrop-filter: blur(60px)
-├─────────────────────────────────────┤
-│ Vignette Fade (z-index: 2)          │  ← Radial gradient fade to black
-├─────────────────────────────────────┤
-│ Content (z-index: 3+)               │  ← Header, notes, forms
-└─────────────────────────────────────┘
+.blob-out-top    → 20s (was 40s)
+.blob-in-top     → 10s (was 30s)
+.blob-out-bottom → 25s (was 50s)
+.blob-in-bottom  → 15s (was 35s)
 ```
+
+---
+
+## Performance Improvements
+
+| Issue | Fix |
+|-------|-----|
+| SVG 200% oversized | Use 100% width/height |
+| 100px blur (expensive) | Reduce to 60px |
+| rect gradients with animate | Use path shapes (simpler) |
+| Multiple backdrop-filter layers | Optimized single layer |
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/BlurredBlobBackground.tsx` | Complete rewrite with path-based blobs, glow filter, exact colors |
+| `src/index.css` | Update animation speeds to match reference (20s, 10s, 25s, 15s) |
 
 ---
 
 ## Technical Details
 
-### New File: `src/components/BlurredBlobBackground.tsx`
-- SVG element with animated gradient blobs using CSS keyframe animations
-- Four rotating blob shapes at different speeds (10s, 15s, 20s, 25s)
-- White/gray gradients that blend subtly with the black background
-- Blur overlay with `backdrop-filter: blur(60px) saturate(140%)`
-- Vignette using radial-gradient that fades to black at edges
+### New SVG Structure
+```text
+<svg viewBox="10 10 80 80">
+  <defs>
+    <filter id="glow">  ← Gaussian blur + color matrix for glow
+    </filter>
+  </defs>
+  
+  <path class="out-top" fill="#9b5de5" filter="url(#glow)" d="..."/>
+  <path class="in-top" fill="#f15bb5" filter="url(#glow)" d="..."/>
+  <path class="out-bottom" fill="#00bbf9" filter="url(#glow)" d="..."/>
+  <path class="in-bottom" fill="#00f5d4" filter="url(#glow)" d="..."/>
+</svg>
+```
 
-### Modifications to: `src/components/NotaForgeDashboard.tsx`
-- Import and add `BlurredBlobBackground` component at the start of the return
-- Ensure the main container and all content have appropriate z-index values
-- The header (currently z-50) will remain above all background layers
+### Layer Structure (unchanged)
+```text
+z-0: SVG blobs (fixed, 100% viewport)
+z-1: Blur layer (backdrop-filter: blur(60px))
+z-2: Vignette (radial-gradient fade to black)
+z-3+: Content (navbar, notes, forms)
+```
 
-### CSS Additions to: `src/index.css`
-- Add keyframe animation for smooth blob rotation
-- Ensure backdrop-filter compatibility with vendor prefixes
-
----
-
-## Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| `src/components/BlurredBlobBackground.tsx` | Create new component |
-| `src/components/NotaForgeDashboard.tsx` | Add background component |
-| `src/index.css` | Add blob rotation animation keyframes |
-
----
-
-## Animation Details
-
-The blobs will rotate continuously at different speeds to create organic, flowing movement:
-- **out-top blob**: 20s rotation cycle
-- **in-top blob**: 10s rotation cycle  
-- **out-bottom blob**: 25s rotation cycle
-- **in-bottom blob**: 15s rotation cycle
-
-All animations use `linear infinite` timing for smooth, continuous motion.
