@@ -46,11 +46,10 @@ serve(async (req) => {
 
     // If not an email, look up the username in profiles
     if (!isEmail) {
-      // Use case-insensitive match by converting to lowercase for consistent lookups
       const { data: profileData, error: profileError } = await supabaseAdmin
         .from('profiles')
         .select('email')
-        .ilike('username', trimmedIdentifier.toLowerCase())
+        .ilike('username', trimmedIdentifier)
         .maybeSingle();
 
       if (profileError) {

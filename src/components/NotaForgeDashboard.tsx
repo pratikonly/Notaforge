@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNotes, Note, NoteType } from '@/hooks/useNotes';
+import { usePublicNotes, Note, NoteType } from '@/hooks/usePublicNotes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function NotaForgeDashboard() {
-  const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = useNotes();
+  const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
   const isMobile = useIsMobile();
   
   // Form state
