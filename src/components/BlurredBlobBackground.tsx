@@ -65,7 +65,7 @@ export function BlurredBlobBackground() {
       <div 
         className="fixed inset-0 z-[2]"
         style={{
-          background: 'radial-gradient(circle at center, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 65%, rgba(0,0,0,0.95) 100%)'
+          background: 'radial-gradient(circle at center, rgba(0,0,0,0) 15%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,0.98) 100%)'
         }}
       />
     </div>
