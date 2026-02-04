@@ -10,13 +10,13 @@ export function BlurredBlobBackground() {
         <defs>
           <radialGradient id="Gradient1" cx="50%" cy="50%" fx="10%" fy="50%" r=".5">
             <animate attributeName="fx" dur="34s" values="0%;3%;0%" repeatCount="indefinite" />
-            <stop offset="0%" stopColor="#ffaa40" />
-            <stop offset="100%" stopColor="#9c40ff" />
+            <stop offset="0%" stopColor="#9c40ff" />
+            <stop offset="100%" stopColor="#dd00f3" />
           </radialGradient>
           <radialGradient id="Gradient2" cx="50%" cy="50%" fx="10%" fy="50%" r=".5">
             <animate attributeName="fx" dur="23.5s" values="0%;3%;0%" repeatCount="indefinite" />
-            <stop offset="0%" stopColor="#e81d1d" />
-            <stop offset="100%" stopColor="#e8b71d" />
+            <stop offset="0%" stopColor="#2b1de8" />
+            <stop offset="100%" stopColor="#9c40ff" />
           </radialGradient>
           <radialGradient id="Gradient3" cx="50%" cy="50%" fx="50%" fy="50%" r=".5">
             <animate attributeName="fx" dur="21.5s" values="0%;3%;0%" repeatCount="indefinite" />
@@ -25,7 +25,7 @@ export function BlurredBlobBackground() {
           </radialGradient>
           <radialGradient id="Gradient4" cx="50%" cy="50%" fx="50%" fy="50%" r=".5">
             <animate attributeName="fx" dur="23s" values="0%;3%;0%" repeatCount="indefinite" />
-            <stop offset="0%" stopColor="#2b1de8" />
+            <stop offset="0%" stopColor="#1ddde8" />
             <stop offset="100%" stopColor="#dd00f3" />
           </radialGradient>
         </defs>

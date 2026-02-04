@@ -154,18 +154,14 @@
 /* Animated border glow for note cards */
 @keyframes border-glow {
   0%, 100% {
-    border-color: rgba(255, 170, 64, 0.4);
-    box-shadow: 0 0 10px rgba(255, 170, 64, 0.1);
-  }
-  25% {
     border-color: rgba(156, 64, 255, 0.4);
     box-shadow: 0 0 10px rgba(156, 64, 255, 0.1);
   }
-  50% {
+  33% {
     border-color: rgba(29, 232, 64, 0.4);
     box-shadow: 0 0 10px rgba(29, 232, 64, 0.1);
   }
-  75% {
+  66% {
     border-color: rgba(221, 0, 243, 0.4);
     box-shadow: 0 0 10px rgba(221, 0, 243, 0.1);
   }
