@@ -1,10 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { usePublicNotes, Note, NoteType } from '@/hooks/usePublicNotes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { NoteFormPanel } from '@/components/NoteFormPanel';
-import { BlurredBlobBackground } from '@/components/BlurredBlobBackground';
 import { 
   Sheet,
   SheetContent,
@@ -24,6 +23,24 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Border color palette
+const BORDER_COLORS = [
+  'rgba(156, 64, 255, 0.5)',   // Purple
+  'rgba(29, 232, 64, 0.5)',    // Green
+  'rgba(221, 0, 243, 0.5)',    // Magenta
+  'rgba(29, 221, 232, 0.5)',   // Cyan
+  'rgba(43, 29, 232, 0.5)',    // Blue
+];
+
+// Get consistent color based on note id
+const getNoteColor = (noteId: string): string => {
+  let hash = 0;
+  for (let i = 0; i < noteId.length; i++) {
+    hash = noteId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return BORDER_COLORS[Math.abs(hash) % BORDER_COLORS.length];
+};
 
 export function NotaForgeDashboard() {
   const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
@@ -304,8 +321,6 @@ export function NotaForgeDashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col relative">
-      {/* Animated blob background */}
-      <BlurredBlobBackground />
       {/* Top Navbar */}
       <header className="sticky top-0 z-50 bg-transparent pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
         
@@ -416,7 +431,11 @@ export function NotaForgeDashboard() {
                 <div
                   key={note.id}
                   onClick={() => setSelectedNote(note)}
-                  className="bg-secondary/60 backdrop-blur-md border-2 rounded-2xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:bg-secondary/80 transition-all cursor-pointer h-[240px] sm:h-[280px] w-full animate-border-glow"
+                  className="bg-secondary/60 backdrop-blur-md border-2 rounded-2xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:bg-secondary/80 transition-all cursor-pointer h-[240px] sm:h-[280px] w-full"
+                  style={{ 
+                    borderColor: getNoteColor(note.id),
+                    boxShadow: `0 0 10px ${getNoteColor(note.id).replace('0.5', '0.2')}`
+                  }}
                 >
                   {/* Card Header */}
                   <div className="flex items-start justify-between gap-2">
@@ -472,7 +491,7 @@ export function NotaForgeDashboard() {
 
       {/* Mobile Sheet for Note Creation */}
       <Sheet open={mobileFormOpen} onOpenChange={setMobileFormOpen}>
-        <SheetContent side="bottom" className="h-[85vh] bg-secondary/70 backdrop-blur-xl border-t-2 border-x-2 animate-border-glow rounded-t-2xl p-4 flex flex-col">
+        <SheetContent side="bottom" className="h-[85vh] bg-secondary/70 backdrop-blur-xl border-t-2 border-x-2 border-purple-500/50 rounded-t-2xl p-4 flex flex-col">
           <SheetHeader className="mb-4">
             <SheetTitle className="text-white text-left">Add New Note</SheetTitle>
           </SheetHeader>

@@ -125,51 +125,7 @@
   }
 }
 
-/* Blob rotation animations - slower speeds */
-@keyframes blob-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.blob-out-top {
-  animation: blob-rotate 40s linear infinite;
-  transform-origin: 13px 25px;
-}
-
-.blob-in-top {
-  animation: blob-rotate 30s linear infinite;
-  transform-origin: 13px 25px;
-}
-
-.blob-out-bottom {
-  animation: blob-rotate 50s linear infinite;
-  transform-origin: 84px 93px;
-}
-
-.blob-in-bottom {
-  animation: blob-rotate 35s linear infinite;
-  transform-origin: 84px 93px;
-}
-
-/* Animated border glow for note cards */
-@keyframes border-glow {
-  0%, 100% {
-    border-color: rgba(156, 64, 255, 0.4);
-    box-shadow: 0 0 10px rgba(156, 64, 255, 0.1);
-  }
-  33% {
-    border-color: rgba(29, 232, 64, 0.4);
-    box-shadow: 0 0 10px rgba(29, 232, 64, 0.1);
-  }
-  66% {
-    border-color: rgba(221, 0, 243, 0.4);
-    box-shadow: 0 0 10px rgba(221, 0, 243, 0.1);
-  }
-}
-
-.animate-border-glow {
-  animation: border-glow 8s ease-in-out infinite;
-}
+/* Note card static border colors are now applied inline via JavaScript */
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
