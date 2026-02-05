@@ -24,23 +24,9 @@ import {
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-// Border color palette
-const BORDER_COLORS = [
-  'rgba(156, 64, 255, 0.5)',   // Purple
-  'rgba(29, 232, 64, 0.5)',    // Green
-  'rgba(221, 0, 243, 0.5)',    // Magenta
-  'rgba(29, 221, 232, 0.5)',   // Cyan
-  'rgba(43, 29, 232, 0.5)',    // Blue
-];
-
-// Get consistent color based on note id
-const getNoteColor = (noteId: string): string => {
-  let hash = 0;
-  for (let i = 0; i < noteId.length; i++) {
-    hash = noteId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return BORDER_COLORS[Math.abs(hash) % BORDER_COLORS.length];
-};
+// Unified fade yellow border color for all notes
+const NOTE_BORDER_COLOR = 'rgba(255, 200, 60, 0.4)';
+const NOTE_GLOW_COLOR = 'rgba(255, 200, 60, 0.15)';
 
 export function NotaForgeDashboard() {
   const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
@@ -433,8 +419,8 @@ export function NotaForgeDashboard() {
                   onClick={() => setSelectedNote(note)}
                   className="bg-secondary/60 backdrop-blur-md border-2 rounded-2xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 hover:bg-secondary/80 transition-all cursor-pointer h-[240px] sm:h-[280px] w-full"
                   style={{ 
-                    borderColor: getNoteColor(note.id),
-                    boxShadow: `0 0 10px ${getNoteColor(note.id).replace('0.5', '0.2')}`
+                    borderColor: NOTE_BORDER_COLOR,
+                    boxShadow: `0 0 10px ${NOTE_GLOW_COLOR}`
                   }}
                 >
                   {/* Card Header */}
@@ -531,7 +517,8 @@ export function NotaForgeDashboard() {
           onClick={() => { setSelectedNote(null); setIsEditing(false); }}
         >
           <div 
-            className="w-full sm:w-[90%] md:w-[85%] lg:w-[70%] h-[90vh] sm:h-[85vh] lg:h-[70vh] max-w-4xl bg-secondary/70 backdrop-blur-xl border-2 rounded-2xl p-4 sm:p-6 overflow-x-hidden overflow-y-auto flex flex-col animate-scale-in animate-border-glow"
+            className="w-full sm:w-[90%] md:w-[85%] lg:w-[70%] h-[90vh] sm:h-[85vh] lg:h-[70vh] max-w-4xl bg-secondary/70 backdrop-blur-xl border-2 rounded-2xl p-4 sm:p-6 overflow-x-hidden overflow-y-auto flex flex-col animate-scale-in"
+            style={{ borderColor: NOTE_BORDER_COLOR, boxShadow: `0 0 20px ${NOTE_GLOW_COLOR}` }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
