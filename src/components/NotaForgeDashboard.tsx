@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { AdminLoginModal } from '@/components/AdminLoginModal';
 
 // Unified fade yellow border color for all notes
 const NOTE_BORDER_COLOR = 'rgba(255, 200, 60, 0.4)';
@@ -31,6 +33,8 @@ const NOTE_GLOW_COLOR = 'rgba(255, 200, 60, 0.15)';
 export function NotaForgeDashboard() {
   const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
   const isMobile = useIsMobile();
+  const { isAdmin, login, logout, loading: authLoading } = useAdminAuth();
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -338,8 +342,17 @@ export function NotaForgeDashboard() {
             </div>
           </div>
 
-          {/* Right spacer */}
-          <div className="w-[200px] mr-16"></div>
+          {/* Right - Role Toggle Button */}
+          <button
+            onClick={() => isAdmin ? logout() : setLoginModalOpen(true)}
+            className={`flex backdrop-blur-sm border rounded-full px-4 py-2 items-center gap-2 transition-colors mr-16 ${
+              isAdmin
+                ? 'bg-amber-600/80 border-amber-500/50 hover:bg-amber-500/80'
+                : 'bg-green-600/80 border-green-500/50 hover:bg-green-500/80'
+            }`}
+          >
+            <span className="text-sm text-white">{isAdmin ? 'Admin' : 'Public'}</span>
+          </button>
         </div>
 
         {/* MOBILE/TABLET LAYOUT (< lg) - Symmetric layout */}
@@ -367,8 +380,17 @@ export function NotaForgeDashboard() {
             <span className="text-sm sm:text-base font-semibold tracking-tight">NotaForge</span>
           </div>
 
-          {/* Right - Blank spacer for symmetry */}
-          <div className="w-11 sm:w-14 md:w-16 shrink-0"></div>
+          {/* Right - Role Toggle Button (Mobile) */}
+          <button
+            onClick={() => isAdmin ? logout() : setLoginModalOpen(true)}
+            className={`flex backdrop-blur-sm border rounded-full p-2 sm:px-3 sm:py-2 items-center gap-1 transition-colors shrink-0 ${
+              isAdmin
+                ? 'bg-amber-600/80 border-amber-500/50 hover:bg-amber-500/80'
+                : 'bg-green-600/80 border-green-500/50 hover:bg-green-500/80'
+            }`}
+          >
+            <span className="text-xs sm:text-sm text-white">{isAdmin ? 'Admin' : 'Public'}</span>
+          </button>
         </div>
       </header>
 
@@ -428,26 +450,28 @@ export function NotaForgeDashboard() {
                     <h3 className="font-semibold text-white truncate flex-1 text-sm sm:text-base">
                       {note.title}
                     </h3>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditModal(note);
-                        }}
-                        className="text-muted-foreground hover:text-white transition-colors shrink-0 p-1"
-                      >
-                        <Pencil size={14} className="sm:w-4 sm:h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(note.id);
-                        }}
-                        className="text-destructive hover:text-destructive/80 transition-colors shrink-0 p-1"
-                      >
-                        <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                      </button>
-                    </div>
+                    {isAdmin && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(note);
+                          }}
+                          className="text-muted-foreground hover:text-white transition-colors shrink-0 p-1"
+                        >
+                          <Pencil size={14} className="sm:w-4 sm:h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(note.id);
+                          }}
+                          className="text-destructive hover:text-destructive/80 transition-colors shrink-0 p-1"
+                        >
+                          <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Card Content */}
@@ -534,7 +558,7 @@ export function NotaForgeDashboard() {
                 <h2 className="text-lg sm:text-xl font-bold text-white flex-1 break-words">{selectedNote.title}</h2>
               )}
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                {!isEditing && (
+                {!isEditing && isAdmin && (
                   <button
                     onClick={() => openEditModal(selectedNote)}
                     className="text-muted-foreground hover:text-white transition-colors p-1"
@@ -640,6 +664,13 @@ export function NotaForgeDashboard() {
           </div>
         </div>
       )}
+
+      {/* Admin Login Modal */}
+      <AdminLoginModal
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        onLogin={login}
+      />
     </div>
   );
 }
