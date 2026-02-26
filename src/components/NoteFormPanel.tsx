@@ -15,6 +15,8 @@ import { NoteType } from '@/hooks/usePublicNotes';
 
 interface NoteFormPanelProps {
   inSheet?: boolean;
+  storageUsedMB?: number;
+  storageTotalMB?: number;
   title: string;
   setTitle: (value: string) => void;
   content: string;
@@ -40,6 +42,8 @@ interface NoteFormPanelProps {
 
 export function NoteFormPanel({
   inSheet = false,
+  storageUsedMB = 0,
+  storageTotalMB = 1000,
   title,
   setTitle,
   content,
@@ -63,6 +67,7 @@ export function NoteFormPanel({
   removeImage,
 }: NoteFormPanelProps) {
   return (
+  <>
     <div 
       className={`bg-secondary/50 border rounded-2xl p-4 flex flex-col transition-all relative ${
         isDragging 
@@ -241,5 +246,46 @@ export function NoteFormPanel({
         </div>
       )}
     </div>
+
+    {/* Storage Bar - shown below panel, only on desktop sidebar (not in sheet) */}
+    {!inSheet && (
+      <div className="mt-2 px-1">
+        {(() => {
+          const pct = Math.min((storageUsedMB / storageTotalMB) * 100, 100);
+          const barColor =
+            pct < 50
+              ? 'from-emerald-500 to-green-400'
+              : pct < 75
+              ? 'from-yellow-500 to-amber-400'
+              : pct < 90
+              ? 'from-orange-500 to-amber-500'
+              : 'from-red-600 to-rose-500';
+          return (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground px-0.5">
+                <span>Storage</span>
+                <span className="font-medium">
+                  {storageUsedMB >= 1000
+                    ? `${(storageUsedMB / 1000).toFixed(1)} GB`
+                    : `${storageUsedMB.toFixed(0)} MB`}{' '}
+                  /{' '}
+                  {storageTotalMB >= 1000
+                    ? `${(storageTotalMB / 1000).toFixed(0)} GB`
+                    : `${storageTotalMB} MB`}{' '}
+                  <span className="text-muted-foreground/70">({pct.toFixed(0)}%)</span>
+                </span>
+              </div>
+              <div className="h-1 w-full rounded-full bg-border overflow-hidden">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-500`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    )}
+  </>
   );
 }
