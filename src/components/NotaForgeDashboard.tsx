@@ -589,21 +589,15 @@ export function NotaForgeDashboard() {
                     style={{
                       background: 'linear-gradient(150deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 60%, rgba(0,0,0,0.18) 100%)',
                       border: `1.5px solid ${ac.border}`,
-                      boxShadow: `0 2px 18px ${ac.glow}, inset 0 1px 0 rgba(255,255,255,0.07)`,
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
                       backdropFilter: 'blur(14px)',
-                      transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
+                      transition: 'background 0.18s ease',
                     }}
                     onMouseEnter={e => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.transform = 'translateY(-2px)';
-                      el.style.background = 'linear-gradient(150deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 60%, rgba(0,0,0,0.12) 100%)';
-                      el.style.boxShadow = `0 8px 32px ${ac.glow.replace(/[\d.]+\)$/, '0.22)')}, 0 0 0 1.5px ${ac.border}, inset 0 1px 0 rgba(255,255,255,0.1)`;
+                      (e.currentTarget as HTMLElement).style.background = 'linear-gradient(150deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 60%, rgba(0,0,0,0.12) 100%)';
                     }}
                     onMouseLeave={e => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.transform = 'translateY(0)';
-                      el.style.background = 'linear-gradient(150deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 60%, rgba(0,0,0,0.18) 100%)';
-                      el.style.boxShadow = `0 2px 18px ${ac.glow}, inset 0 1px 0 rgba(255,255,255,0.07)`;
+                      (e.currentTarget as HTMLElement).style.background = 'linear-gradient(150deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 60%, rgba(0,0,0,0.18) 100%)';
                     }}
                   >
                     {/* Top shimmer */}
