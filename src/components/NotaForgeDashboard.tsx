@@ -207,6 +207,18 @@ export function NotaForgeDashboard() {
     return note.file_name?.toLowerCase().endsWith('.pdf');
   };
 
+  // Estimate storage used: 1 note ~= a few KB of text; files counted by assumed average
+  // We count image/file notes as approx 500KB each, others as 5KB
+  const storageUsedMB = useMemo(() => {
+    return notes.reduce((acc, note) => {
+      if (note.note_type === 'image' || note.note_type === 'file' || note.note_type === 'pdf') {
+        return acc + 0.5; // ~500KB per file note
+      }
+      return acc + 0.005; // ~5KB per text note
+    }, 0);
+  }, [notes]);
+  const storageTotalMB = 500;
+
   const handleSubmit = async () => {
     if (!title.trim() && !content.trim() && fileUrls.length === 0 && !linkUrl.trim()) {
       return;
@@ -348,10 +360,10 @@ export function NotaForgeDashboard() {
             className={`flex backdrop-blur-sm border rounded-full px-4 py-2 items-center gap-2 transition-colors mr-16 ${
               isAdmin
                 ? 'bg-amber-600/80 border-amber-500/50 hover:bg-amber-500/80'
-                : 'bg-green-600/80 border-green-500/50 hover:bg-green-500/80'
+                : 'bg-purple-500/10 border-purple-500/40 hover:bg-purple-500/20'
             }`}
           >
-            <span className="text-sm text-white">{isAdmin ? 'Admin' : 'Public'}</span>
+            <span className={`text-sm ${isAdmin ? 'text-white' : 'text-purple-300'}`}>{isAdmin ? 'Admin' : 'Public'}</span>
           </button>
         </div>
 
@@ -386,10 +398,10 @@ export function NotaForgeDashboard() {
             className={`flex backdrop-blur-sm border rounded-full p-2 sm:px-3 sm:py-2 items-center gap-1 transition-colors shrink-0 ${
               isAdmin
                 ? 'bg-amber-600/80 border-amber-500/50 hover:bg-amber-500/80'
-                : 'bg-green-600/80 border-green-500/50 hover:bg-green-500/80'
+                : 'bg-purple-500/10 border-purple-500/40 hover:bg-purple-500/20'
             }`}
           >
-            <span className="text-xs sm:text-sm text-white">{isAdmin ? 'Admin' : 'Public'}</span>
+            <span className={`text-xs sm:text-sm ${isAdmin ? 'text-white' : 'text-purple-300'}`}>{isAdmin ? 'Admin' : 'Public'}</span>
           </button>
         </div>
       </header>
@@ -419,6 +431,8 @@ export function NotaForgeDashboard() {
             handleSubmit={handleSubmit}
             clearAttachment={clearAttachment}
             removeImage={removeImage}
+            storageUsedMB={storageUsedMB}
+            storageTotalMB={storageTotalMB}
           />
         </aside>
 
