@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 import { useToast } from './use-toast';
 
 export type NoteType = 'text' | 'image' | 'pdf' | 'video' | 'audio' | 'link' | 'file';
@@ -122,28 +123,9 @@ export function usePublicNotes() {
 
   const uploadFile = useCallback(async (file: File): Promise<string | null> => {
     try {
-      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'bin';
-      const timestamp = Date.now();
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const fileName = `public/${timestamp}-${sanitizedName}`;
-
-      const { data, error: uploadError } = await supabase.storage
-        .from('note-files')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        throw uploadError;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('note-files')
-        .getPublicUrl(fileName);
-
-      return urlData.publicUrl;
+      const result = await uploadToCloudinary(file);
+      if (!result) throw new Error('Upload returned no result');
+      return result.url;
     } catch (error: any) {
       console.error('Error uploading file:', error);
       toast({
