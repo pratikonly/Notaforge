@@ -219,25 +219,67 @@ export function NotaForgeDashboard() {
     return () => window.removeEventListener('keydown', h);
   }, [storageOpen]);
 
-  // Storage stats — estimated sizes per note type (Supabase free = 1 GB)
+  // Cloudinary real usage stats
+  const [cloudinaryUsage, setCloudinaryUsage] = useState<{
+    storage: { used_bytes: number; limit_bytes: number };
+    resources: { images: number; videos: number; raw: number };
+    plan: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    supabase.functions.invoke('cloudinary-usage').then(({ data, error }) => {
+      if (!error && data) setCloudinaryUsage(data);
+    });
+  }, [isAdmin]);
+
+  // Storage stats — real Cloudinary data + local note counts
   const storageData = useMemo((): StorageData => {
     const cats = {
       photos: { count: 0, mb: 0 }, docs:  { count: 0, mb: 0 },
       videos: { count: 0, mb: 0 }, audio: { count: 0, mb: 0 },
       links:  { count: 0, mb: 0 }, text:  { count: 0, mb: 0 },
     };
+
+    // Count notes by type from DB
     notes.forEach(n => {
-      if      (n.note_type === 'image')                         { cats.photos.count++; cats.photos.mb += 1.2; }
-      else if (n.note_type === 'video')                         { cats.videos.count++; cats.videos.mb += 8.0; }
-      else if (n.note_type === 'audio')                         { cats.audio.count++;  cats.audio.mb  += 3.5; }
-      else if (n.note_type === 'file' || n.note_type === 'pdf') { cats.docs.count++;   cats.docs.mb   += 1.8; }
-      else if (n.note_type === 'link')                          { cats.links.count++;  cats.links.mb  += 0.001; }
-      else                                                       { cats.text.count++;   cats.text.mb   += 0.01; }
+      if      (n.note_type === 'image')                         { cats.photos.count++; }
+      else if (n.note_type === 'video')                         { cats.videos.count++; }
+      else if (n.note_type === 'audio')                         { cats.audio.count++;  }
+      else if (n.note_type === 'file' || n.note_type === 'pdf') { cats.docs.count++;   }
+      else if (n.note_type === 'link')                          { cats.links.count++;  }
+      else                                                       { cats.text.count++;   }
+    });
+
+    if (cloudinaryUsage) {
+      const usedMB = cloudinaryUsage.storage.used_bytes / (1024 * 1024);
+      const limitMB = cloudinaryUsage.storage.limit_bytes / (1024 * 1024);
+      const totalFiles = (cloudinaryUsage.resources.images || 0) + (cloudinaryUsage.resources.videos || 0) + (cloudinaryUsage.resources.raw || 0);
+      // Distribute real storage proportionally by resource counts
+      const imgRatio = totalFiles > 0 ? (cloudinaryUsage.resources.images / totalFiles) : 0;
+      const vidRatio = totalFiles > 0 ? (cloudinaryUsage.resources.videos / totalFiles) : 0;
+      const rawRatio = totalFiles > 0 ? (cloudinaryUsage.resources.raw / totalFiles) : 0;
+      cats.photos.mb = usedMB * imgRatio;
+      cats.videos.mb = usedMB * vidRatio;
+      cats.docs.mb   = usedMB * rawRatio;
+      cats.links.mb  = 0;
+      cats.text.mb   = 0;
+      return { cats, totalMB: usedMB, limitMB, pct: limitMB > 0 ? Math.min((usedMB / limitMB) * 100, 100) : 0 };
+    }
+
+    // Fallback: estimates
+    notes.forEach(n => {
+      if      (n.note_type === 'image')                         { cats.photos.mb += 1.2; }
+      else if (n.note_type === 'video')                         { cats.videos.mb += 8.0; }
+      else if (n.note_type === 'audio')                         { cats.audio.mb  += 3.5; }
+      else if (n.note_type === 'file' || n.note_type === 'pdf') { cats.docs.mb   += 1.8; }
+      else if (n.note_type === 'link')                          { cats.links.mb  += 0.001; }
+      else                                                       { cats.text.mb   += 0.01; }
     });
     const totalMB = Object.values(cats).reduce((s, c) => s + c.mb, 0);
-    const limitMB = 1024; // 1 GB Supabase free
+    const limitMB = 25 * 1024; // 25 GB Cloudinary free
     return { cats, totalMB, limitMB, pct: totalMB > 0 ? Math.min((totalMB / limitMB) * 100, 100) : 0 };
-  }, [notes]);
+  }, [notes, cloudinaryUsage]);
 
   const resetForm = () => {
     setTitle(''); setContent(''); setNoteType('text');
