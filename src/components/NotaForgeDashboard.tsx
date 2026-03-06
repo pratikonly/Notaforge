@@ -177,7 +177,7 @@ function StoragePopup({ data, onClose, alignRight }: { data: StorageData; onClos
         {/* Footer */}
         <div className="px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <p className="text-[9px] text-center" style={{ color: 'rgba(255,255,255,0.22)' }}>
-            {totalNotes} note{totalNotes !== 1 ? 's' : ''} total · sizes are estimates
+            {totalNotes} note{totalNotes !== 1 ? 's' : ''} total · Cloudinary storage
           </p>
         </div>
       </div>
