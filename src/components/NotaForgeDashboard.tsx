@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { usePublicNotes, Note, NoteType } from '@/hooks/usePublicNotes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
