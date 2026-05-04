@@ -58,6 +58,36 @@ export type Database = {
           },
         ]
       }
+      keep_alive_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          notes_count: number | null
+          response_time_ms: number | null
+          source: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notes_count?: number | null
+          response_time_ms?: number | null
+          source?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notes_count?: number | null
+          response_time_ms?: number | null
+          source?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       login_history: {
         Row: {
           browser: string | null
@@ -203,6 +233,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_keep_alive_logs: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
