@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NotaForgeDashboard } from "@/components/NotaForgeDashboard";
+import AdminKeepAlive from "./pages/AdminKeepAlive";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -16,6 +17,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<NotaForgeDashboard />} />
+          <Route path="/admin/keep-alive" element={<AdminKeepAlive />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
