@@ -19,35 +19,37 @@ export function useAdminAuth() {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
+    const resolveSession = async (session: Session | null) => {
+      if (!mounted) return;
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        await checkAdminRole(session.user.id);
+      } else {
+        setIsAdmin(false);
+      }
+      if (mounted) setLoading(false);
+    };
+
     // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminRole(session.user.id);
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
-
-        setLoading(false);
+      (_event, session) => {
+        // Defer to avoid deadlocks inside the callback
+        setTimeout(() => resolveSession(session), 0);
       }
     );
 
     // THEN check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      }
-      setLoading(false);
+      resolveSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [checkAdminRole]);
 
   const login = async (email: string, password: string) => {
