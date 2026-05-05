@@ -100,8 +100,10 @@ serve(async (req) => {
   const source =
     req.headers.get("user-agent")?.slice(0, 100) ?? "unknown";
 
-  // Validate shared secret
-  const providedSecret = req.headers.get("x-keep-alive-secret");
+  // Validate shared secret — accept via header OR query param (for free monitors that don't support custom headers)
+  const url = new URL(req.url);
+  const providedSecret =
+    req.headers.get("x-keep-alive-secret") ?? url.searchParams.get("secret");
   if (!KEEP_ALIVE_SECRET || providedSecret !== KEEP_ALIVE_SECRET) {
     await logPing(supabase, {
       status: "unauthorized",
