@@ -295,15 +295,25 @@ export function NotaForgeDashboard() {
     setLinkUrl(''); setFileUrls([]); setFileNames([]);
   };
 
+  const detectType = (file: File): NoteType => {
+    const mime = file.type.toLowerCase();
+    const name = file.name.toLowerCase();
+    if (mime.startsWith('image/')) return 'image';
+    if (mime.startsWith('video/')) return 'video';
+    if (mime.startsWith('audio/')) return 'audio';
+    if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+    return 'file';
+  };
+
   const processFileUpload = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
     const filesToUpload = files.slice(0, 5 - fileUrls.length);
-    if (filesToUpload.length === 0) { alert('Maximum 5 images allowed'); return; }
-    const isImage = filesToUpload[0].type.startsWith('image/');
-    const type: 'image' | 'file' = isImage ? 'image' : 'file';
-    const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (filesToUpload.length === 0) { alert('Maximum 5 files allowed'); return; }
+    const firstType = detectType(filesToUpload[0]);
+    const isImage = firstType === 'image';
+    const maxSize = isImage ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
     for (const file of filesToUpload) {
-      if (file.size > maxSize) { alert(`"${file.name}" exceeds ${type === 'image' ? '10MB' : '50MB'}`); return; }
+      if (file.size > maxSize) { alert(`"${file.name}" exceeds ${isImage ? '10MB' : '100MB'}`); return; }
     }
     setIsUploading(true); setUploadSuccess(false);
     const urls: string[] = [], names: string[] = [];
@@ -314,7 +324,7 @@ export function NotaForgeDashboard() {
     setIsUploading(false);
     if (urls.length > 0) {
       setFileUrls(p => [...p, ...urls]); setFileNames(p => [...p, ...names]);
-      setNoteType(type); setUploadSuccess(true);
+      setNoteType(firstType); setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     }
   }, [uploadFile, fileUrls.length]);
@@ -387,6 +397,24 @@ export function NotaForgeDashboard() {
   const handleDelete = async (id: string) => { await deleteNote(id); };
   const formatTimestamp = (date: string) => format(new Date(date), 'dd/MM/yy · HH:mm');
 
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(url, '_blank');
+    }
+  };
+
   // Per-type card accent
   const noteAccent = (type: string) => {
     switch (type) {
@@ -417,10 +445,25 @@ export function NotaForgeDashboard() {
             <span className="text-xs break-all line-clamp-4" style={{ color: 'rgba(253,230,138,0.75)' }}>{note.link_url}</span>
           </div>
         ) : null;
+      case 'video':
+        return note.file_url ? (
+          <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden"
+               style={{ background: 'rgba(0,0,0,0.45)' }}>
+            <video src={note.file_url} className="max-w-full max-h-full" muted preload="metadata" />
+          </div>
+        ) : null;
+      case 'audio':
+        return note.file_url ? (
+          <div className="flex flex-col items-center justify-center h-full gap-2.5 px-2">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
+                 style={{ background: 'linear-gradient(145deg,rgba(52,211,153,0.25),rgba(16,185,129,0.12))', border: '1px solid rgba(52,211,153,0.3)' }}>
+              <Music size={20} style={{ color: '#34d399' }} />
+            </div>
+            <span className="text-[10px] truncate max-w-full text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>{note.file_name || 'Audio'}</span>
+          </div>
+        ) : null;
       case 'file':
       case 'pdf':
-      case 'video':
-      case 'audio':
         return note.file_url ? (
           <div className="flex flex-col items-center justify-center h-full gap-2.5">
             {isPdfFile(note) ? (
@@ -777,8 +820,36 @@ export function NotaForgeDashboard() {
                 )
               )}
               {selectedNote.note_type === 'image' && selectedNote.file_url && (
-                <img src={selectedNote.file_url} alt={selectedNote.title}
-                     className="w-full max-h-[300px] sm:max-h-[400px] object-contain rounded border border-border" />
+                <div className="space-y-3">
+                  <img src={selectedNote.file_url} alt={selectedNote.title}
+                       className="w-full max-h-[300px] sm:max-h-[400px] object-contain rounded border border-border" />
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || `${selectedNote.title}.jpg`)}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
+                    <Download size={18} className="shrink-0" />
+                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download image'}</span>
+                  </button>
+                </div>
+              )}
+              {selectedNote.note_type === 'video' && selectedNote.file_url && (
+                <div className="space-y-3">
+                  <video src={selectedNote.file_url} controls
+                         className="w-full max-h-[300px] sm:max-h-[400px] rounded border border-border bg-black" />
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'video')}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
+                    <Download size={18} className="shrink-0" />
+                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download video'}</span>
+                  </button>
+                </div>
+              )}
+              {selectedNote.note_type === 'audio' && selectedNote.file_url && (
+                <div className="space-y-3">
+                  <audio src={selectedNote.file_url} controls className="w-full" />
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'audio')}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
+                    <Download size={18} className="shrink-0" />
+                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download audio'}</span>
+                  </button>
+                </div>
               )}
               {selectedNote.note_type === 'link' && selectedNote.link_url && (
                 <a href={selectedNote.link_url} target="_blank" rel="noopener noreferrer"
@@ -793,11 +864,11 @@ export function NotaForgeDashboard() {
                     <iframe src={selectedNote.file_url}
                             className="w-full h-[250px] sm:h-[400px] rounded border border-border bg-white" title="PDF Preview" />
                   )}
-                  <a href={selectedNote.file_url} target="_blank" rel="noopener noreferrer"
-                     className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border">
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'file')}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
                     <Download size={18} className="shrink-0" />
                     <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download file'}</span>
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
