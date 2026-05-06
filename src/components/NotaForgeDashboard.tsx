@@ -295,15 +295,25 @@ export function NotaForgeDashboard() {
     setLinkUrl(''); setFileUrls([]); setFileNames([]);
   };
 
+  const detectType = (file: File): NoteType => {
+    const mime = file.type.toLowerCase();
+    const name = file.name.toLowerCase();
+    if (mime.startsWith('image/')) return 'image';
+    if (mime.startsWith('video/')) return 'video';
+    if (mime.startsWith('audio/')) return 'audio';
+    if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+    return 'file';
+  };
+
   const processFileUpload = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
     const filesToUpload = files.slice(0, 5 - fileUrls.length);
-    if (filesToUpload.length === 0) { alert('Maximum 5 images allowed'); return; }
-    const isImage = filesToUpload[0].type.startsWith('image/');
-    const type: 'image' | 'file' = isImage ? 'image' : 'file';
-    const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (filesToUpload.length === 0) { alert('Maximum 5 files allowed'); return; }
+    const firstType = detectType(filesToUpload[0]);
+    const isImage = firstType === 'image';
+    const maxSize = isImage ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
     for (const file of filesToUpload) {
-      if (file.size > maxSize) { alert(`"${file.name}" exceeds ${type === 'image' ? '10MB' : '50MB'}`); return; }
+      if (file.size > maxSize) { alert(`"${file.name}" exceeds ${isImage ? '10MB' : '100MB'}`); return; }
     }
     setIsUploading(true); setUploadSuccess(false);
     const urls: string[] = [], names: string[] = [];
@@ -314,7 +324,7 @@ export function NotaForgeDashboard() {
     setIsUploading(false);
     if (urls.length > 0) {
       setFileUrls(p => [...p, ...urls]); setFileNames(p => [...p, ...names]);
-      setNoteType(type); setUploadSuccess(true);
+      setNoteType(firstType); setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     }
   }, [uploadFile, fileUrls.length]);
