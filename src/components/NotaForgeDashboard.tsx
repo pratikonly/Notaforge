@@ -397,6 +397,24 @@ export function NotaForgeDashboard() {
   const handleDelete = async (id: string) => { await deleteNote(id); };
   const formatTimestamp = (date: string) => format(new Date(date), 'dd/MM/yy · HH:mm');
 
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(url, '_blank');
+    }
+  };
+
   // Per-type card accent
   const noteAccent = (type: string) => {
     switch (type) {
