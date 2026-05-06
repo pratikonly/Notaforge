@@ -161,7 +161,7 @@ export default function AdminKeepAlive() {
                 <TableHead>Status</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead>Response</TableHead>
-                <TableHead className="hidden md:table-cell">Source</TableHead>
+                <TableHead className="hidden md:table-cell min-w-[220px]">Monitor / Source</TableHead>
                 <TableHead>Error</TableHead>
               </TableRow>
             </TableHeader>
@@ -173,36 +173,51 @@ export default function AdminKeepAlive() {
                   </TableCell>
                 </TableRow>
               ) : (
-                logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="whitespace-nowrap text-xs">
-                      {new Date(log.created_at).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          log.status === "success"
-                            ? "default"
-                            : log.status === "unauthorized"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                      >
-                        {log.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{log.notes_count ?? "—"}</TableCell>
-                    <TableCell>
-                      {log.response_time_ms != null ? `${log.response_time_ms}ms` : "—"}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-[200px] truncate">
-                      {log.source ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-red-400 max-w-[300px] truncate">
-                      {log.error_message ?? "—"}
-                    </TableCell>
-                  </TableRow>
-                ))
+                logs.map((log) => {
+                  const src = log.source ?? "—";
+                  let monitor = "Unknown";
+                  if (/UptimeRobot/i.test(src)) monitor = "UptimeRobot";
+                  else if (/cron-job\.org|cronjob/i.test(src)) monitor = "Cron-job.org";
+                  else if (/Pingdom/i.test(src)) monitor = "Pingdom";
+                  else if (/curl/i.test(src)) monitor = "curl (manual)";
+                  else if (/Mozilla|Chrome|Safari|Firefox/i.test(src)) monitor = "Browser";
+                  else if (src === "—") monitor = "—";
+                  return (
+                    <TableRow key={log.id}>
+                      <TableCell className="whitespace-nowrap text-xs">
+                        {new Date(log.created_at).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            log.status === "success"
+                              ? "default"
+                              : log.status === "unauthorized"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {log.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{log.notes_count ?? "—"}</TableCell>
+                      <TableCell>
+                        {log.response_time_ms != null ? `${log.response_time_ms}ms` : "—"}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-xs">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-foreground">{monitor}</span>
+                          <span className="text-muted-foreground text-[10px] break-all" title={src}>
+                            {src}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-red-400 max-w-[300px] truncate">
+                        {log.error_message ?? "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

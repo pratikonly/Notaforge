@@ -224,15 +224,15 @@ export function NotaForgeDashboard() {
   const [cloudinaryUsage, setCloudinaryUsage] = useState<{
     storage: { used_bytes: number; limit_bytes: number };
     resources: { images: number; videos: number; raw: number };
+    bytes_by_type?: { images: number; videos: number; raw: number };
     plan: string;
   } | null>(null);
 
   useEffect(() => {
-    if (!isAdmin) return;
     supabase.functions.invoke('cloudinary-usage').then(({ data, error }) => {
       if (!error && data) setCloudinaryUsage(data);
     });
-  }, [isAdmin]);
+  }, []);
 
   // Storage stats — real Cloudinary data + local note counts
   const storageData = useMemo((): StorageData => {
@@ -255,14 +255,22 @@ export function NotaForgeDashboard() {
     if (cloudinaryUsage) {
       const usedMB = cloudinaryUsage.storage.used_bytes / (1024 * 1024);
       const limitMB = cloudinaryUsage.storage.limit_bytes / (1024 * 1024);
-      const totalFiles = (cloudinaryUsage.resources.images || 0) + (cloudinaryUsage.resources.videos || 0) + (cloudinaryUsage.resources.raw || 0);
-      // Distribute real storage proportionally by resource counts
-      const imgRatio = totalFiles > 0 ? (cloudinaryUsage.resources.images / totalFiles) : 0;
-      const vidRatio = totalFiles > 0 ? (cloudinaryUsage.resources.videos / totalFiles) : 0;
-      const rawRatio = totalFiles > 0 ? (cloudinaryUsage.resources.raw / totalFiles) : 0;
-      cats.photos.mb = usedMB * imgRatio;
-      cats.videos.mb = usedMB * vidRatio;
-      cats.docs.mb   = usedMB * rawRatio;
+      const bbt = cloudinaryUsage.bytes_by_type;
+      if (bbt) {
+        // Exact per-type sizes from Cloudinary search
+        cats.photos.mb = bbt.images / (1024 * 1024);
+        cats.videos.mb = bbt.videos / (1024 * 1024);
+        cats.docs.mb   = bbt.raw    / (1024 * 1024);
+      } else {
+        // Fallback: proportional by resource counts
+        const totalFiles = (cloudinaryUsage.resources.images || 0) + (cloudinaryUsage.resources.videos || 0) + (cloudinaryUsage.resources.raw || 0);
+        const imgRatio = totalFiles > 0 ? (cloudinaryUsage.resources.images / totalFiles) : 0;
+        const vidRatio = totalFiles > 0 ? (cloudinaryUsage.resources.videos / totalFiles) : 0;
+        const rawRatio = totalFiles > 0 ? (cloudinaryUsage.resources.raw / totalFiles) : 0;
+        cats.photos.mb = usedMB * imgRatio;
+        cats.videos.mb = usedMB * vidRatio;
+        cats.docs.mb   = usedMB * rawRatio;
+      }
       cats.links.mb  = 0;
       cats.text.mb   = 0;
       return { cats, totalMB: usedMB, limitMB, pct: limitMB > 0 ? Math.min((usedMB / limitMB) * 100, 100) : 0 };
