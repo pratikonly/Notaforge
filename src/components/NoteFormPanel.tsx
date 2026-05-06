@@ -118,12 +118,12 @@ export function NoteFormPanel({
         <label>
           <input
             type="file"
-            accept=".pdf,.doc,.docx,.txt,.zip,.rar"
+            accept="*/*"
             onChange={(e) => handleFileUpload(e, 'file')}
             className="hidden"
             disabled={isUploading}
           />
-          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'file' && fileUrls.length > 0 ? 'bg-secondary border-white' : ''}`}>
+          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${(noteType === 'file' || noteType === 'pdf' || noteType === 'video' || noteType === 'audio') && fileUrls.length > 0 ? 'bg-secondary border-white' : ''}`}>
             <FileText size={18} className="text-white" />
           </div>
         </label>
