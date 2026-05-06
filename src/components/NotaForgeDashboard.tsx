@@ -445,10 +445,25 @@ export function NotaForgeDashboard() {
             <span className="text-xs break-all line-clamp-4" style={{ color: 'rgba(253,230,138,0.75)' }}>{note.link_url}</span>
           </div>
         ) : null;
+      case 'video':
+        return note.file_url ? (
+          <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden"
+               style={{ background: 'rgba(0,0,0,0.45)' }}>
+            <video src={note.file_url} className="max-w-full max-h-full" muted preload="metadata" />
+          </div>
+        ) : null;
+      case 'audio':
+        return note.file_url ? (
+          <div className="flex flex-col items-center justify-center h-full gap-2.5 px-2">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
+                 style={{ background: 'linear-gradient(145deg,rgba(52,211,153,0.25),rgba(16,185,129,0.12))', border: '1px solid rgba(52,211,153,0.3)' }}>
+              <Music size={20} style={{ color: '#34d399' }} />
+            </div>
+            <span className="text-[10px] truncate max-w-full text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>{note.file_name || 'Audio'}</span>
+          </div>
+        ) : null;
       case 'file':
       case 'pdf':
-      case 'video':
-      case 'audio':
         return note.file_url ? (
           <div className="flex flex-col items-center justify-center h-full gap-2.5">
             {isPdfFile(note) ? (
