@@ -211,19 +211,16 @@ export default function AdminKeepAlive() {
         {/* Setup hint */}
         <Card className="p-4 bg-card/30 backdrop-blur border-border/50 text-sm text-muted-foreground space-y-3">
           <div>
-            <p className="font-semibold text-foreground mb-2">Monitor setup — Option A (header, recommended)</p>
-            <p>UptimeRobot or any paid tier: send custom header <code className="text-primary">x-keep-alive-secret: &lt;your secret&gt;</code> to:</p>
-            <code className="block mt-2 p-2 bg-background/50 rounded text-xs break-all">
-              https://ffhfmdfvqmfktkohdnlm.supabase.co/functions/v1/keep-alive
-            </code>
-          </div>
-          <div>
-            <p className="font-semibold text-foreground mb-2">Option B — query param (free Cron-job.org)</p>
-            <p>If your monitor's free plan blocks custom headers, just hit this URL (replace <code>YOUR_SECRET</code>):</p>
+            <p className="font-semibold text-foreground mb-2">Monitor setup — query param (works on free tiers)</p>
+            <p>Use this URL on UptimeRobot, Cron-job.org, or any monitor (replace <code>YOUR_SECRET</code>):</p>
             <code className="block mt-2 p-2 bg-background/50 rounded text-xs break-all">
               https://ffhfmdfvqmfktkohdnlm.supabase.co/functions/v1/keep-alive?secret=YOUR_SECRET
             </code>
-            <p className="mt-2 text-xs">Use HEAD or GET method. Both work.</p>
+            <p className="mt-2 text-xs">Method: HEAD or GET. Interval: 5 min recommended. No custom headers required.</p>
+          </div>
+          <div>
+            <p className="font-semibold text-foreground mb-2">Optional — header method (paid tiers only)</p>
+            <p>If your monitor supports custom headers, you can instead send <code className="text-primary">x-keep-alive-secret: &lt;your secret&gt;</code> with no query param.</p>
           </div>
         </Card>
       </div>
