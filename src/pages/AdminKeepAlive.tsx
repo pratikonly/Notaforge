@@ -161,7 +161,7 @@ export default function AdminKeepAlive() {
                 <TableHead>Status</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead>Response</TableHead>
-                <TableHead className="hidden md:table-cell">Source</TableHead>
+                <TableHead className="hidden md:table-cell min-w-[220px]">Monitor / Source</TableHead>
                 <TableHead>Error</TableHead>
               </TableRow>
             </TableHeader>
