@@ -820,8 +820,36 @@ export function NotaForgeDashboard() {
                 )
               )}
               {selectedNote.note_type === 'image' && selectedNote.file_url && (
-                <img src={selectedNote.file_url} alt={selectedNote.title}
-                     className="w-full max-h-[300px] sm:max-h-[400px] object-contain rounded border border-border" />
+                <div className="space-y-3">
+                  <img src={selectedNote.file_url} alt={selectedNote.title}
+                       className="w-full max-h-[300px] sm:max-h-[400px] object-contain rounded border border-border" />
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || `${selectedNote.title}.jpg`)}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
+                    <Download size={18} className="shrink-0" />
+                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download image'}</span>
+                  </button>
+                </div>
+              )}
+              {selectedNote.note_type === 'video' && selectedNote.file_url && (
+                <div className="space-y-3">
+                  <video src={selectedNote.file_url} controls
+                         className="w-full max-h-[300px] sm:max-h-[400px] rounded border border-border bg-black" />
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'video')}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
+                    <Download size={18} className="shrink-0" />
+                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download video'}</span>
+                  </button>
+                </div>
+              )}
+              {selectedNote.note_type === 'audio' && selectedNote.file_url && (
+                <div className="space-y-3">
+                  <audio src={selectedNote.file_url} controls className="w-full" />
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'audio')}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
+                    <Download size={18} className="shrink-0" />
+                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download audio'}</span>
+                  </button>
+                </div>
               )}
               {selectedNote.note_type === 'link' && selectedNote.link_url && (
                 <a href={selectedNote.link_url} target="_blank" rel="noopener noreferrer"
@@ -836,11 +864,11 @@ export function NotaForgeDashboard() {
                     <iframe src={selectedNote.file_url}
                             className="w-full h-[250px] sm:h-[400px] rounded border border-border bg-white" title="PDF Preview" />
                   )}
-                  <a href={selectedNote.file_url} target="_blank" rel="noopener noreferrer"
-                     className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border">
+                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'file')}
+                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
                     <Download size={18} className="shrink-0" />
                     <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download file'}</span>
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
