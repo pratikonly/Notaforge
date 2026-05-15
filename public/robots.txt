@@ -14,4 +14,4 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 
-Sitemap: /sitemap.xml
+Sitemap: https://notaforge.qzz.io/sitemap.xml
