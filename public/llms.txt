@@ -1,0 +1,9 @@
+# NotaForge
+
+> Simple notes vault to store, share, and organize text, images, PDFs, audio, video, and links. Built by Pratik.
+
+NotaForge is a public note-sharing app. Anyone can view and create notes; admins can edit and delete. Files are stored via Cloudinary.
+
+## Pages
+
+- [Home](/): Browse and create public notes (text, image, PDF, file, audio, video, link).
