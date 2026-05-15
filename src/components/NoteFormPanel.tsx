@@ -101,7 +101,7 @@ export function NoteFormPanel({
       
       {/* Attachment Buttons */}
       <div className="flex gap-2 mb-2">
-        <label>
+        <label aria-label="Attach images">
           <input
             type="file"
             accept="image/*"
@@ -109,22 +109,26 @@ export function NoteFormPanel({
             onChange={(e) => handleFileUpload(e, 'image')}
             className="hidden"
             disabled={isUploading || fileUrls.length >= 5}
+            aria-label="Attach images"
           />
           <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'image' && fileUrls.length > 0 ? 'bg-secondary border-white' : ''} ${fileUrls.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-            <Image size={18} className="text-white" />
+            <Image size={18} className="text-white" aria-hidden="true" />
+            <span className="sr-only">Attach images</span>
           </div>
         </label>
         
-        <label>
+        <label aria-label="Attach file">
           <input
             type="file"
             accept="*/*"
             onChange={(e) => handleFileUpload(e, 'file')}
             className="hidden"
             disabled={isUploading}
+            aria-label="Attach file"
           />
           <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${(noteType === 'file' || noteType === 'pdf' || noteType === 'video' || noteType === 'audio') && fileUrls.length > 0 ? 'bg-secondary border-white' : ''}`}>
-            <FileText size={18} className="text-white" />
+            <FileText size={18} className="text-white" aria-hidden="true" />
+            <span className="sr-only">Attach file</span>
           </div>
         </label>
         
@@ -132,8 +136,10 @@ export function NoteFormPanel({
           type="button"
           className={`p-2 rounded border border-border hover:bg-secondary transition-colors ${noteType === 'link' ? 'bg-secondary border-white' : ''}`}
           onClick={() => setNoteType(noteType === 'link' ? 'text' : 'link')}
+          aria-label="Toggle link attachment"
+          aria-pressed={noteType === 'link'}
         >
-          <Link2 size={18} className="text-white" />
+          <Link2 size={18} className="text-white" aria-hidden="true" />
         </button>
       </div>
 
@@ -214,8 +220,9 @@ export function NoteFormPanel({
                   <button
                     onClick={() => removeImage(index)}
                     className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-destructive rounded-full flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    aria-label={`Remove image ${index + 1}`}
                   >
-                    <X size={10} className="text-white" />
+                    <X size={10} className="text-white" aria-hidden="true" />
                   </button>
                   <span className="absolute bottom-0.5 right-0.5 text-[8px] bg-background/80 px-1 rounded text-muted-foreground">
                     {index + 1}

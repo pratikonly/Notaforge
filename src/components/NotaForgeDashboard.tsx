@@ -556,6 +556,7 @@ export function NotaForgeDashboard() {
                     backdropFilter: 'blur(14px)',
                   }}
                   title="Storage"
+                  aria-label="View storage usage"
                 >
                   <HardDrive size={15} style={{ color: 'rgba(255,255,255,0.56)' }} />
                 </button>
@@ -625,6 +626,7 @@ export function NotaForgeDashboard() {
                     border: '1px solid rgba(255,255,255,0.11)',
                     backdropFilter: 'blur(14px)',
                   }}
+                  aria-label="View storage usage"
                 >
                   <HardDrive size={14} style={{ color: 'rgba(255,255,255,0.56)' }} />
                 </button>
@@ -662,6 +664,7 @@ export function NotaForgeDashboard() {
 
         {/* Main grid */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px]">
+          <h1 className="sr-only">NotaForge — Simple Note Sharing and Storage</h1>
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin" size={32} />
@@ -714,6 +717,7 @@ export function NotaForgeDashboard() {
                             style={{ color: 'rgba(255,255,255,0.38)' }}
                             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
                             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            aria-label={`Edit note ${note.title}`}
                           >
                             <Pencil size={11} />
                           </button>
@@ -723,6 +727,7 @@ export function NotaForgeDashboard() {
                             style={{ color: 'rgba(248,113,113,0.55)' }}
                             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.12)')}
                             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            aria-label={`Delete note ${note.title}`}
                           >
                             <Trash2 size={11} />
                           </button>
@@ -800,11 +805,11 @@ export function NotaForgeDashboard() {
               )}
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 {!isEditing && isAdmin && (
-                  <button onClick={() => openEditModal(selectedNote)} className="text-muted-foreground hover:text-white transition-colors p-1">
+                  <button onClick={() => openEditModal(selectedNote)} className="text-muted-foreground hover:text-white transition-colors p-1" aria-label="Edit note">
                     <Pencil size={18} />
                   </button>
                 )}
-                <button onClick={() => { setSelectedNote(null); setIsEditing(false); }} className="text-muted-foreground hover:text-white transition-colors p-1">
+                <button onClick={() => { setSelectedNote(null); setIsEditing(false); }} className="text-muted-foreground hover:text-white transition-colors p-1" aria-label="Close note">
                   <X size={22} />
                 </button>
               </div>
