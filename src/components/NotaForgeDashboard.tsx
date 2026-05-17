@@ -76,10 +76,11 @@ function StoragePopup({ data, onClose, alignRight }: { data: StorageData; onClos
     <>
       <div className="fixed inset-0 z-[55]" onClick={onClose} />
       <div
-        className={`absolute top-11 z-[60] w-[290px] rounded-2xl overflow-hidden`}
+        className={`fixed z-[60] w-[290px] rounded-2xl overflow-hidden`}
         style={{
-          right: alignRight ? 0 : 'auto',
-          left:  alignRight ? 'auto' : 0,
+          top: '72px',
+          right: alignRight ? '16px' : 'auto',
+          left:  alignRight ? 'auto' : '16px',
           background: 'rgba(10,10,16,0.94)',
           backdropFilter: 'blur(32px) saturate(180%)',
           border: '1px solid rgba(255,255,255,0.07)',
@@ -307,11 +308,13 @@ export function NotaForgeDashboard() {
     return 'file';
   };
 
-  const processFileUpload = useCallback(async (files: File[]) => {
+  const processFileUpload = useCallback(async (files: File[], forcedType: NoteType | null = null) => {
     if (files.length === 0) return;
     const filesToUpload = files.slice(0, 5 - fileUrls.length);
     if (filesToUpload.length === 0) { alert('Maximum 5 files allowed'); return; }
-    const firstType = detectType(filesToUpload[0]);
+    // Bug fix: use forcedType when provided (from button click context).
+    // For drag-drop/paste, detect from first file MIME type.
+    const firstType: NoteType = forcedType ?? detectType(filesToUpload[0]);
     const isImage = firstType === 'image';
     const maxSize = isImage ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
     for (const file of filesToUpload) {
@@ -333,8 +336,14 @@ export function NotaForgeDashboard() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
     const files = Array.from(e.target.files || []);
+    // Bug fix: reset input so re-selecting the same file fires onChange again
+    e.target.value = '';
     if (files.length === 0) return;
-    await processFileUpload(files);
+    // Bug fix: honour the 'type' param from the button clicked — don't let
+    // detectType() override it. If user clicks the image button, force image type.
+    // Only use detectType for drag-drop / paste where no button context exists.
+    const forcedType: NoteType | null = type === 'image' ? 'image' : null;
+    await processFileUpload(files, forcedType);
   };
 
   const handleDragOver  = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
@@ -357,7 +366,16 @@ export function NotaForgeDashboard() {
     return () => window.removeEventListener('paste', handlePaste);
   }, [processFileUpload]);
 
-  const clearAttachment = () => { setFileUrls([]); setFileNames([]); setNoteType('text'); setLinkUrl(''); };
+  // Bug fix: only clear linkUrl when NOT in link mode — user typed the URL
+  // intentionally; "Remove All" shouldn't silently wipe it.
+  const clearAttachment = () => {
+    setFileUrls([]);
+    setFileNames([]);
+    if (noteType !== 'link') {
+      setNoteType('text');
+      setLinkUrl('');
+    }
+  };
   const removeImage = (idx: number) => {
     // Bug fix: use functional updater so we read next state, not stale closure
     setFileUrls(prev => {
