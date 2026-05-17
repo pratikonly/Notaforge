@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Activity, CheckCircle2, XCircle, ShieldAlert, ArrowLeft, RefreshCw } from "lucide-react";
+import { Activity, CheckCircle2, XCircle, ShieldAlert, ArrowLeft, RefreshCw, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface PingLog {
@@ -26,61 +26,122 @@ interface PingLog {
   created_at: string;
 }
 
+const KEEP_LIMIT = 10;
+
 export default function AdminKeepAlive() {
   const navigate = useNavigate();
   const { isAdmin, loading: authLoading } = useAdminAuth();
   const [logs, setLogs] = useState<PingLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteCount, setDeleteCount] = useState<number | null>(null);
 
-  const fetchLogs = async () => {
+  // ─── Prune old rows: keep only the 10 most recent, delete the rest ───
+  const pruneOldLogs = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      // Get IDs of the 10 most recent rows
+      const { data: recent, error: fetchErr } = await supabase
+        .from("keep_alive_logs")
+        .select("id")
+        .order("created_at", { ascending: false })
+        .limit(KEEP_LIMIT);
+
+      if (fetchErr || !recent) {
+        console.error("Prune fetch error:", fetchErr);
+        setIsDeleting(false);
+        return;
+      }
+
+      const keepIds = recent.map((r) => r.id);
+
+      if (keepIds.length === 0) {
+        setIsDeleting(false);
+        return;
+      }
+
+      // Delete everything NOT in the keep list
+      const { error: deleteErr, count } = await supabase
+        .from("keep_alive_logs")
+        .delete({ count: "exact" })
+        .not("id", "in", `(${keepIds.join(",")})`);
+
+      if (deleteErr) {
+        console.error("Prune delete error:", deleteErr);
+      } else {
+        setDeleteCount(count ?? 0);
+        // Auto-clear the delete count message after 4s
+        setTimeout(() => setDeleteCount(null), 4000);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
+
+  // ─── Fetch only the 10 most recent logs ───
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("keep_alive_logs")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(KEEP_LIMIT);
 
     if (!error && data) setLogs(data as PingLog[]);
     setLoading(false);
-  };
+  }, []);
+
+  // ─── Prune then fetch on load ───
+  const pruneAndFetch = useCallback(async () => {
+    await pruneOldLogs();
+    await fetchLogs();
+  }, [pruneOldLogs, fetchLogs]);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
       navigate("/");
       return;
     }
-    if (isAdmin) fetchLogs();
-  }, [isAdmin, authLoading, navigate]);
+    if (isAdmin) pruneAndFetch();
+  }, [isAdmin, authLoading, navigate, pruneAndFetch]);
 
   if (authLoading || !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 80% at 20% 10%, rgba(120,50,180,0.25) 0%, transparent 50%)," +
+            "radial-gradient(ellipse 60% 60% at 80% 20%, rgba(40,80,200,0.2) 0%, transparent 45%)," +
+            "hsl(0 0% 2%)",
+        }}
+      >
         <p className="text-muted-foreground">Loading…</p>
       </div>
     );
   }
 
   const lastSuccess = logs.find((l) => l.status === "success");
-  const successCount24h = logs.filter(
-    (l) =>
-      l.status === "success" &&
-      Date.now() - new Date(l.created_at).getTime() < 24 * 60 * 60 * 1000,
-  ).length;
-  const failureCount24h = logs.filter(
-    (l) =>
-      l.status === "failure" &&
-      Date.now() - new Date(l.created_at).getTime() < 24 * 60 * 60 * 1000,
-  ).length;
-  const unauthorizedCount24h = logs.filter(
-    (l) =>
-      l.status === "unauthorized" &&
-      Date.now() - new Date(l.created_at).getTime() < 24 * 60 * 60 * 1000,
-  ).length;
+  const successCount = logs.filter((l) => l.status === "success").length;
+  const failureCount = logs.filter((l) => l.status === "failure").length;
+  const unauthorizedCount = logs.filter((l) => l.status === "unauthorized").length;
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div
+      className="min-h-screen text-foreground p-6"
+      style={{
+        background:
+          "radial-gradient(ellipse 80% 80% at 20% 10%, rgba(120,50,180,0.25) 0%, transparent 50%)," +
+          "radial-gradient(ellipse 60% 60% at 80% 20%, rgba(40,80,200,0.2) 0%, transparent 45%)," +
+          "radial-gradient(ellipse 70% 70% at 85% 80%, rgba(100,40,160,0.18) 0%, transparent 50%)," +
+          "radial-gradient(ellipse 50% 50% at 10% 90%, rgba(50,100,220,0.15) 0%, transparent 45%)," +
+          "hsl(0 0% 2%)",
+        backgroundAttachment: "fixed",
+      }}
+    >
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -89,17 +150,39 @@ export default function AdminKeepAlive() {
             <div>
               <h1 className="text-2xl font-bold">Keep-Alive Monitor</h1>
               <p className="text-sm text-muted-foreground">
-                Database ping history (last 7 days, max 100 entries shown)
+                Showing last {KEEP_LIMIT} pings · older rows auto-deleted on load
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+
+          <div className="flex items-center gap-2">
+            {/* Manual prune button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={pruneAndFetch}
+              disabled={loading || isDeleting}
+              className="border-red-500/40 text-red-400 hover:bg-red-500/10"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {isDeleting ? "Pruning…" : "Prune & Refresh"}
+            </Button>
+
+            <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
-        {/* Stats grid */}
+        {/* Deleted rows banner */}
+        {deleteCount !== null && (
+          <div className="px-4 py-2 rounded-lg text-sm font-medium text-green-400 border border-green-500/30 bg-green-500/10">
+            🗑️ Pruned {deleteCount} old log{deleteCount !== 1 ? "s" : ""} from the database.
+          </div>
+        )}
+
+        {/* ── Stats grid ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4 bg-card/50 backdrop-blur border-border/50">
             <div className="flex items-center gap-3">
@@ -109,7 +192,7 @@ export default function AdminKeepAlive() {
                 <p className="text-sm font-semibold">
                   {lastSuccess
                     ? formatDistanceToNow(new Date(lastSuccess.created_at), { addSuffix: true })
-                    : "Never"}
+                    : "None in last 10"}
                 </p>
               </div>
             </div>
@@ -129,8 +212,8 @@ export default function AdminKeepAlive() {
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-xs text-muted-foreground">Successes (24h)</p>
-                <p className="text-2xl font-bold">{successCount24h}</p>
+                <p className="text-xs text-muted-foreground">Successes (last {KEEP_LIMIT})</p>
+                <p className="text-2xl font-bold">{successCount}</p>
               </div>
             </div>
           </Card>
@@ -139,12 +222,12 @@ export default function AdminKeepAlive() {
             <div className="flex items-center gap-3">
               <XCircle className="h-8 w-8 text-red-500" />
               <div>
-                <p className="text-xs text-muted-foreground">Failures (24h)</p>
-                <p className="text-2xl font-bold">{failureCount24h}</p>
-                {unauthorizedCount24h > 0 && (
+                <p className="text-xs text-muted-foreground">Failures (last {KEEP_LIMIT})</p>
+                <p className="text-2xl font-bold">{failureCount}</p>
+                {unauthorizedCount > 0 && (
                   <p className="text-xs text-yellow-500 flex items-center gap-1 mt-1">
                     <ShieldAlert className="h-3 w-3" />
-                    {unauthorizedCount24h} unauthorized
+                    {unauthorizedCount} unauthorized
                   </p>
                 )}
               </div>
@@ -152,7 +235,7 @@ export default function AdminKeepAlive() {
           </Card>
         </div>
 
-        {/* Logs table */}
+        {/* ── Logs table ── */}
         <Card className="bg-card/50 backdrop-blur border-border/50 overflow-hidden">
           <Table>
             <TableHeader>
@@ -169,7 +252,7 @@ export default function AdminKeepAlive() {
               {logs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    {loading ? "Loading…" : "No pings logged yet. Set up your monitor to start."}
+                    {loading ? "Loading…" : "No pings logged yet."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -223,7 +306,7 @@ export default function AdminKeepAlive() {
           </Table>
         </Card>
 
-        {/* Setup hint */}
+        {/* ── Setup hint ── */}
         <Card className="p-4 bg-card/30 backdrop-blur border-border/50 text-sm text-muted-foreground space-y-3">
           <div>
             <p className="font-semibold text-foreground mb-2">Monitor setup — query param (works on free tiers)</p>
@@ -235,9 +318,13 @@ export default function AdminKeepAlive() {
           </div>
           <div>
             <p className="font-semibold text-foreground mb-2">Optional — header method (paid tiers only)</p>
-            <p>If your monitor supports custom headers, you can instead send <code className="text-primary">x-keep-alive-secret: &lt;your secret&gt;</code> with no query param.</p>
+            <p>
+              If your monitor supports custom headers, you can instead send{" "}
+              <code className="text-primary">x-keep-alive-secret: &lt;your secret&gt;</code> with no query param.
+            </p>
           </div>
         </Card>
+
       </div>
     </div>
   );
