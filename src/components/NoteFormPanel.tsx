@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { 
   Image, 
   FileText, 
@@ -62,6 +63,11 @@ export function NoteFormPanel({
   clearAttachment,
   removeImage,
 }: NoteFormPanelProps) {
+  // Bug fix: key changes whenever fileUrls.length changes so the input
+  // element is remounted — this lets the same file be re-selected after removal.
+  const imageInputKey = `img-${fileUrls.length}`;
+  const fileInputKey  = `file-${fileUrls.length}`;
+
   return (
     <div 
       className={`bg-secondary/50 border rounded-2xl p-4 flex flex-col transition-all relative ${
@@ -103,6 +109,7 @@ export function NoteFormPanel({
       <div className="flex gap-2 mb-2">
         <label aria-label="Attach images">
           <input
+            key={imageInputKey}
             type="file"
             accept="image/*"
             multiple
@@ -119,6 +126,7 @@ export function NoteFormPanel({
         
         <label aria-label="Attach file">
           <input
+            key={fileInputKey}
             type="file"
             accept="*/*"
             onChange={(e) => handleFileUpload(e, 'file')}
