@@ -228,11 +228,13 @@ export function NotaForgeDashboard() {
     plan: string;
   } | null>(null);
 
+  // Bug fix: only fetch Cloudinary usage when admin — don't leak stats to public visitors
   useEffect(() => {
+    if (!isAdmin) return;
     supabase.functions.invoke('cloudinary-usage').then(({ data, error }) => {
       if (!error && data) setCloudinaryUsage(data);
     });
-  }, []);
+  }, [isAdmin]);
 
   // Storage stats — real Cloudinary data + local note counts
   const storageData = useMemo((): StorageData => {
@@ -357,9 +359,13 @@ export function NotaForgeDashboard() {
 
   const clearAttachment = () => { setFileUrls([]); setFileNames([]); setNoteType('text'); setLinkUrl(''); };
   const removeImage = (idx: number) => {
-    setFileUrls(p => p.filter((_, i) => i !== idx));
-    setFileNames(p => p.filter((_, i) => i !== idx));
-    if (fileUrls.length <= 1) setNoteType('text');
+    // Bug fix: use functional updater so we read next state, not stale closure
+    setFileUrls(prev => {
+      const next = prev.filter((_, i) => i !== idx);
+      if (next.length === 0) setNoteType('text');
+      return next;
+    });
+    setFileNames(prev => prev.filter((_, i) => i !== idx));
   };
 
   const openEditModal = (note: Note) => {
@@ -397,19 +403,18 @@ export function NotaForgeDashboard() {
   const handleDelete = async (id: string) => { await deleteNote(id); };
   const formatTimestamp = (date: string) => format(new Date(date), 'dd/MM/yy · HH:mm');
 
-  const downloadFile = async (url: string, filename: string) => {
+  // Bug fix: fetch() fails silently on Cloudinary raw/file URLs due to CORS.
+  // Direct anchor with download attribute works cross-origin without a fetch.
+  // If the browser blocks it (some mobile), fallback to _blank open.
+  const downloadFile = (url: string, filename: string) => {
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Download failed');
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = blobUrl;
+      a.href = url;
       a.download = filename || 'download';
+      a.rel = 'noopener noreferrer';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
     } catch {
       window.open(url, '_blank');
     }
@@ -504,7 +509,7 @@ export function NotaForgeDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col relative">
+    <div className="min-h-screen bg-transparent text-foreground flex flex-col relative">
 
       {/* ══ Navbar ══ */}
       <header className="sticky top-0 z-50 bg-transparent pt-3 sm:pt-4 pb-2 px-2 sm:px-4">
