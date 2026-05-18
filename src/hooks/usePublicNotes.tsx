@@ -31,9 +31,9 @@ export function usePublicNotes() {
   // Track IDs we inserted ourselves so we don't double-add from the realtime event
   const localInsertIds = useRef<Set<string>>(new Set());
 
-  const fetchNotes = useCallback(async () => {
+  const fetchNotes = useCallback(async (showLoader = true) => {
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const { data, error } = await supabase
         .from('notes')
         .select('*')
@@ -54,7 +54,7 @@ export function usePublicNotes() {
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, [toast]);
 
@@ -62,16 +62,19 @@ export function usePublicNotes() {
   useEffect(() => {
     fetchNotes();
 
+    // IMPORTANT: For realtime to work, enable it in Supabase:
+    // Dashboard → Table Editor → notes table → Enable Realtime (toggle on)
+    // OR run: ALTER TABLE notes REPLICA IDENTITY FULL;
+    // Unique channel name avoids conflicts when hot-reloading in dev
     const channel = supabase
-      .channel('notes-realtime', {
-        config: { broadcast: { self: false } },
-      })
+      .channel(`notes-realtime-${Date.now()}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'notes',
+          filter: 'is_deleted=eq.false',
         },
         (payload) => {
           if (payload.event === 'INSERT') {
