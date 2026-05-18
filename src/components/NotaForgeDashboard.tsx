@@ -35,7 +35,7 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { AdminLoginModal } from '@/components/AdminLoginModal';
-import { NoteDetailModal } from '@/components/NoteDetailModal';
+import { NoteDetailModal } from '@/components/NoteDetailModal.tsx';
 
 /* ─────────────────────────────────────────────────────────────
    Constants
@@ -800,9 +800,13 @@ export function NotaForgeDashboard() {
                             style={{ background: ac.tag, color: ac.tagText }}>
                         {note.note_type}
                       </span>
-                      <span className="text-[9px] sm:text-[10px]" style={{ color: 'rgba(255,255,255,0.22)' }}>
+                      <span className="text-[9px] sm:text-[10px] flex-1" style={{ color: 'rgba(255,255,255,0.22)' }}>
                         {formatTimestamp(note.created_at)}
                       </span>
+                      {/* Copy button — text notes only, always visible */}
+                      {note.note_type === 'text' && note.content && (
+                        <CopyButton text={note.content} />
+                      )}
                     </div>
                   </div>
                 );
