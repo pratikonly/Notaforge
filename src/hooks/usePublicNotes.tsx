@@ -77,7 +77,7 @@ export function usePublicNotes() {
           filter: 'is_deleted=eq.false',
         },
         (payload) => {
-          if (payload.event === 'INSERT') {
+          if (payload.eventType === 'INSERT') {
             const newNote = payload.new as Note;
             // Skip if we already added this note optimistically from our own device
             if (localInsertIds.current.has(newNote.id)) {
@@ -93,7 +93,7 @@ export function usePublicNotes() {
             });
           }
 
-          if (payload.event === 'UPDATE') {
+          if (payload.eventType === 'UPDATE') {
             const updated = payload.new as Note;
             // If archived or soft-deleted, remove from list
             if (updated.is_archived || updated.is_deleted) {
@@ -105,7 +105,7 @@ export function usePublicNotes() {
             );
           }
 
-          if (payload.event === 'DELETE') {
+          if (payload.eventType === 'DELETE') {
             const deleted = payload.old as { id: string };
             setNotes(prev => prev.filter(n => n.id !== deleted.id));
           }
