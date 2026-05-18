@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import {
   X, Pencil, Download, ExternalLink, FileIcon,
   Music, Video, Link2, FileText, ZoomIn, ZoomOut,
-  RotateCw, ChevronLeft, ChevronRight, Check, Maximize2
+  RotateCw, ChevronLeft, ChevronRight, Check, Maximize2, Copy
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -47,6 +47,7 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
   const [imgRotate, setImgRotate]     = useState(0);
   const [lightbox, setLightbox]       = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copied, setCopied] = useState(false);
   const ac = getAccent(note.note_type);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -78,6 +79,21 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
     if (!confirmDelete) { setConfirmDelete(true); return; }
     await onDelete(note.id);
     onClose();
+  };
+
+  const handleCopy = async () => {
+    if (!note.content) return;
+    try {
+      await navigator.clipboard.writeText(note.content);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = note.content;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
   };
 
   const isPdf = note.file_name?.toLowerCase().endsWith('.pdf');
