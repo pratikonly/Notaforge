@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Activity, CheckCircle2, XCircle, ShieldAlert, ArrowLeft, RefreshCw, Trash2 } from "lucide-react";
+import { Activity, CheckCircle2, XCircle, ShieldAlert, ArrowLeft, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface PingLog {
@@ -33,50 +33,6 @@ export default function AdminKeepAlive() {
   const { isAdmin, loading: authLoading } = useAdminAuth();
   const [logs, setLogs] = useState<PingLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteCount, setDeleteCount] = useState<number | null>(null);
-
-  // ─── Prune old rows: keep only the 10 most recent, delete the rest ───
-  const pruneOldLogs = useCallback(async () => {
-    setIsDeleting(true);
-    try {
-      // Get IDs of the 10 most recent rows
-      const { data: recent, error: fetchErr } = await supabase
-        .from("keep_alive_logs")
-        .select("id")
-        .order("created_at", { ascending: false })
-        .limit(KEEP_LIMIT);
-
-      if (fetchErr || !recent) {
-        console.error("Prune fetch error:", fetchErr);
-        setIsDeleting(false);
-        return;
-      }
-
-      const keepIds = recent.map((r) => r.id);
-
-      if (keepIds.length === 0) {
-        setIsDeleting(false);
-        return;
-      }
-
-      // Delete everything NOT in the keep list
-      const { error: deleteErr, count } = await supabase
-        .from("keep_alive_logs")
-        .delete({ count: "exact" })
-        .not("id", "in", `(${keepIds.join(",")})`);
-
-      if (deleteErr) {
-        console.error("Prune delete error:", deleteErr);
-      } else {
-        setDeleteCount(count ?? 0);
-        // Auto-clear the delete count message after 4s
-        setTimeout(() => setDeleteCount(null), 4000);
-      }
-    } finally {
-      setIsDeleting(false);
-    }
-  }, []);
 
   // ─── Fetch only the 10 most recent logs ───
   const fetchLogs = useCallback(async () => {
@@ -91,19 +47,13 @@ export default function AdminKeepAlive() {
     setLoading(false);
   }, []);
 
-  // ─── Prune then fetch on load ───
-  const pruneAndFetch = useCallback(async () => {
-    await pruneOldLogs();
-    await fetchLogs();
-  }, [pruneOldLogs, fetchLogs]);
-
   useEffect(() => {
     if (!authLoading && !isAdmin) {
       navigate("/");
       return;
     }
-    if (isAdmin) pruneAndFetch();
-  }, [isAdmin, authLoading, navigate, pruneAndFetch]);
+    if (isAdmin) fetchLogs();
+  }, [isAdmin, authLoading, navigate, fetchLogs]);
 
   if (authLoading || !isAdmin) {
     return (
@@ -155,32 +105,11 @@ export default function AdminKeepAlive() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Manual prune button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={pruneAndFetch}
-              disabled={loading || isDeleting}
-              className="border-red-500/40 text-red-400 hover:bg-red-500/10"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {isDeleting ? "Pruning…" : "Prune & Refresh"}
-            </Button>
-
-            <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
         </div>
-
-        {/* Deleted rows banner */}
-        {deleteCount !== null && (
-          <div className="px-4 py-2 rounded-lg text-sm font-medium text-green-400 border border-green-500/30 bg-green-500/10">
-            🗑️ Pruned {deleteCount} old log{deleteCount !== 1 ? "s" : ""} from the database.
-          </div>
-        )}
 
         {/* ── Stats grid ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
