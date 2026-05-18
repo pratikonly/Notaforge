@@ -33,6 +33,7 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { AdminLoginModal } from '@/components/AdminLoginModal';
+import { NoteDetailModal } from '@/components/NoteDetailModal';
 
 /* ─────────────────────────────────────────────────────────────
    Constants
@@ -190,7 +191,7 @@ function StoragePopup({ data, onClose, alignRight }: { data: StorageData; onClos
    Main Dashboard
 ───────────────────────────────────────────────────────────── */
 export function NotaForgeDashboard() {
-  const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
+  const { notes, loading, realtimeConnected, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
   const isMobile = useIsMobile();
   const { isAdmin, login, logout, loading: authLoading } = useAdminAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -207,9 +208,6 @@ export function NotaForgeDashboard() {
   const [isUploading, setIsUploading]   = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [isEditing, setIsEditing]       = useState(false);
-  const [editTitle, setEditTitle]       = useState('');
-  const [editContent, setEditContent]   = useState('');
   const [isDragging, setIsDragging]     = useState(false);
   const [mobileFormOpen, setMobileFormOpen] = useState(false);
 
@@ -386,15 +384,7 @@ export function NotaForgeDashboard() {
     setFileNames(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const openEditModal = (note: Note) => {
-    setSelectedNote(note); setEditTitle(note.title);
-    setEditContent(note.content || ''); setIsEditing(true);
-  };
-  const handleSaveEdit = async () => {
-    if (!selectedNote) return;
-    const updated = await updateNote(selectedNote.id, { title: editTitle, content: editContent });
-    if (updated) { setSelectedNote(updated); setIsEditing(false); }
-  };
+
   const isPdfFile = (note: Note) => note.file_name?.toLowerCase().endsWith('.pdf');
 
   const handleSubmit = async () => {
@@ -560,7 +550,29 @@ export function NotaForgeDashboard() {
                 <rect width="100" height="100" rx="20" fill="#000" stroke="#fff" strokeWidth="4"/>
                 <path d="M30 70 L50 30 L70 70" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round"/>
               </svg>
-              <span className="font-semibold tracking-tight">NotaForge</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold tracking-tight">NotaForge</span>
+                {/* Realtime indicator */}
+                <div
+                  title={realtimeConnected ? 'Live — syncing in real time' : 'Connecting…'}
+                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all"
+                  style={{
+                    background: realtimeConnected ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${realtimeConnected ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                    color: realtimeConnected ? '#34d399' : 'rgba(255,255,255,0.3)',
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{
+                      background: realtimeConnected ? '#34d399' : 'rgba(255,255,255,0.2)',
+                      boxShadow: realtimeConnected ? '0 0 6px #34d399' : 'none',
+                      animation: realtimeConnected ? 'pulse 2s ease-in-out infinite' : 'none',
+                    }}
+                  />
+                  {realtimeConnected ? 'Live' : '…'}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -735,7 +747,7 @@ export function NotaForgeDashboard() {
                       {isAdmin && (
                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 -mt-0.5">
                           <button
-                            onClick={e => { e.stopPropagation(); openEditModal(note); }}
+                            onClick={e => { e.stopPropagation(); setSelectedNote(note); }}
                             className="p-1.5 rounded-lg transition-colors"
                             style={{ color: 'rgba(255,255,255,0.38)' }}
                             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
@@ -803,115 +815,24 @@ export function NotaForgeDashboard() {
         </SheetContent>
       </Sheet>
 
-      {/* Note detail modal */}
+      {/* Note detail modal — new NoteDetailModal component */}
       {selectedNote && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-2 sm:p-4 animate-fade-in"
-          onClick={() => { setSelectedNote(null); setIsEditing(false); }}
-        >
-          <div
-            className="w-full sm:w-[90%] md:w-[85%] lg:w-[70%] h-[90vh] sm:h-[85vh] lg:h-[70vh] max-w-4xl rounded-2xl p-4 sm:p-6 overflow-x-hidden overflow-y-auto flex flex-col animate-scale-in"
-            style={{
-              background: 'rgba(10,10,16,0.9)',
-              backdropFilter: 'blur(32px)',
-              border: `1.5px solid ${NOTE_BORDER_COLOR}`,
-              boxShadow: `0 0 40px ${NOTE_GLOW_COLOR}, inset 0 1px 0 rgba(255,255,255,0.06)`,
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-2 sm:gap-4 mb-4">
-              {isEditing ? (
-                <Input value={editTitle} onChange={e => setEditTitle(e.target.value)}
-                       className="text-lg sm:text-xl font-bold bg-secondary border-border text-white flex-1" placeholder="Note title" />
-              ) : (
-                <h2 className="text-lg sm:text-xl font-bold text-white flex-1 break-words">{selectedNote.title}</h2>
-              )}
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                {!isEditing && isAdmin && (
-                  <button onClick={() => openEditModal(selectedNote)} className="text-muted-foreground hover:text-white transition-colors p-1" aria-label="Edit note">
-                    <Pencil size={18} />
-                  </button>
-                )}
-                <button onClick={() => { setSelectedNote(null); setIsEditing(false); }} className="text-muted-foreground hover:text-white transition-colors p-1" aria-label="Close note">
-                  <X size={22} />
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-4 w-full flex-1 overflow-y-auto overflow-x-hidden">
-              {isEditing ? (
-                <Textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-                          className="min-h-[150px] bg-secondary border-border text-white w-full" placeholder="Note content..." />
-              ) : (
-                selectedNote.content && (
-                  <p className="text-muted-foreground whitespace-pre-wrap break-words w-full text-sm sm:text-base">{selectedNote.content}</p>
-                )
-              )}
-              {selectedNote.note_type === 'image' && selectedNote.file_url && (
-                <div className="space-y-3">
-                  <img src={selectedNote.file_url} alt={selectedNote.title}
-                       className="w-full max-h-[300px] sm:max-h-[400px] object-contain rounded border border-border" />
-                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || `${selectedNote.title}.jpg`)}
-                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
-                    <Download size={18} className="shrink-0" />
-                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download image'}</span>
-                  </button>
-                </div>
-              )}
-              {selectedNote.note_type === 'video' && selectedNote.file_url && (
-                <div className="space-y-3">
-                  <video src={selectedNote.file_url} controls
-                         className="w-full max-h-[300px] sm:max-h-[400px] rounded border border-border bg-black" />
-                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'video')}
-                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
-                    <Download size={18} className="shrink-0" />
-                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download video'}</span>
-                  </button>
-                </div>
-              )}
-              {selectedNote.note_type === 'audio' && selectedNote.file_url && (
-                <div className="space-y-3">
-                  <audio src={selectedNote.file_url} controls className="w-full" />
-                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'audio')}
-                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
-                    <Download size={18} className="shrink-0" />
-                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download audio'}</span>
-                  </button>
-                </div>
-              )}
-              {selectedNote.note_type === 'link' && selectedNote.link_url && (
-                <a href={selectedNote.link_url} target="_blank" rel="noopener noreferrer"
-                   className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full overflow-hidden">
-                  <ExternalLink size={18} className="shrink-0" />
-                  <span className="break-all text-sm sm:text-base">{selectedNote.link_url}</span>
-                </a>
-              )}
-              {(selectedNote.note_type === 'file' || selectedNote.note_type === 'pdf') && selectedNote.file_url && (
-                <div className="space-y-4">
-                  {isPdfFile(selectedNote) && (
-                    <iframe src={selectedNote.file_url}
-                            className="w-full h-[250px] sm:h-[400px] rounded border border-border bg-white" title="PDF Preview" />
-                  )}
-                  <button onClick={() => downloadFile(selectedNote.file_url!, selectedNote.file_name || 'file')}
-                          className="flex items-center gap-2 text-white hover:underline p-3 bg-secondary rounded border border-border w-full">
-                    <Download size={18} className="shrink-0" />
-                    <span className="text-sm sm:text-base">{selectedNote.file_name || 'Download file'}</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {isEditing && (
-              <div className="mt-4 flex gap-2">
-                <Button onClick={handleSaveEdit} className="bg-white text-black hover:bg-white/90 flex-1 sm:flex-none">Save Changes</Button>
-                <Button variant="outline" onClick={() => setIsEditing(false)} className="border-border text-white hover:bg-secondary flex-1 sm:flex-none">Cancel</Button>
-              </div>
-            )}
-            <div className="mt-4 sm:mt-6 pt-4 border-t border-border text-[10px] sm:text-xs text-muted-foreground">
-              Created: {formatTimestamp(selectedNote.created_at)}
-            </div>
-          </div>
-        </div>
+        <NoteDetailModal
+          note={selectedNote}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedNote(null)}
+          onSave={async (id, title, content) => {
+            const updated = await updateNote(id, { title, content });
+            if (updated) setSelectedNote(updated);
+            return updated;
+          }}
+          onDelete={async (id) => {
+            const ok = await deleteNote(id);
+            setSelectedNote(null);
+            return ok;
+          }}
+          onDownload={downloadFile}
+        />
       )}
 
       <AdminLoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} onLogin={login} />
