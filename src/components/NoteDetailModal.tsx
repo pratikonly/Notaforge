@@ -212,10 +212,26 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
               />
             ) : (
               note.content && (
-                <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words"
-                   style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  {note.content}
-                </p>
+                <div className="relative group/text">
+                  <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words pr-9"
+                     style={{ color: 'rgba(255,255,255,0.7)' }}>
+                    {note.content}
+                  </p>
+                  {/* Copy button — top-right, always visible on mobile, hover on desktop */}
+                  <button
+                    onClick={handleCopy}
+                    className="absolute top-0 right-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover/text:opacity-100"
+                    style={{
+                      background: copied ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${copied ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.09)'}`,
+                      color: copied ? '#34d399' : 'rgba(255,255,255,0.38)',
+                    }}
+                    aria-label={copied ? 'Copied!' : 'Copy to clipboard'}
+                    title={copied ? 'Copied!' : 'Copy to clipboard'}
+                  >
+                    {copied ? <Check size={12} /> : <Copy size={12} />}
+                  </button>
+                </div>
               )
             )}
 
@@ -424,15 +440,33 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
                 </Button>
               </div>
             ) : (
-              /* Show note type icon */
-              <div className="w-6 h-6 rounded-md flex items-center justify-center"
-                   style={{ background: ac.badge }}>
-                {note.note_type === 'image'  && <ImageIcon size={11}    style={{ color: ac.badgeText }} />}
-                {note.note_type === 'link'   && <Link2 size={11}        style={{ color: ac.badgeText }} />}
-                {(note.note_type === 'file' || note.note_type === 'pdf') && <FileText size={11} style={{ color: ac.badgeText }} />}
-                {note.note_type === 'video'  && <Video size={11}        style={{ color: ac.badgeText }} />}
-                {note.note_type === 'audio'  && <Music size={11}        style={{ color: ac.badgeText }} />}
-                {note.note_type === 'text'   && <FileText size={11}     style={{ color: ac.badgeText }} />}
+              <div className="flex items-center gap-2">
+                {/* Copy button in footer — shown for any note with text content */}
+                {note.content && (
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all"
+                    style={{
+                      background: copied ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${copied ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      color: copied ? '#34d399' : 'rgba(255,255,255,0.35)',
+                    }}
+                    aria-label={copied ? 'Copied!' : 'Copy text'}
+                  >
+                    {copied ? <Check size={11} /> : <Copy size={11} />}
+                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                )}
+                {/* Type icon */}
+                <div className="w-6 h-6 rounded-md flex items-center justify-center"
+                     style={{ background: ac.badge }}>
+                  {note.note_type === 'image'  && <ImageIcon size={11} style={{ color: ac.badgeText }} />}
+                  {note.note_type === 'link'   && <Link2 size={11}     style={{ color: ac.badgeText }} />}
+                  {(note.note_type === 'file' || note.note_type === 'pdf') && <FileText size={11} style={{ color: ac.badgeText }} />}
+                  {note.note_type === 'video'  && <Video size={11}     style={{ color: ac.badgeText }} />}
+                  {note.note_type === 'audio'  && <Music size={11}     style={{ color: ac.badgeText }} />}
+                  {note.note_type === 'text'   && <FileText size={11}  style={{ color: ac.badgeText }} />}
+                </div>
               </div>
             )}
           </div>
