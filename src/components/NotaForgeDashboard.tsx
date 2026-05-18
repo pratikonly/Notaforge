@@ -28,6 +28,8 @@ import {
   Music,
   Video,
   Type,
+  Copy,
+  Check as CheckIcon,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -190,8 +192,46 @@ function StoragePopup({ data, onClose, alignRight }: { data: StorageData; onClos
 /* ─────────────────────────────────────────────────────────────
    Main Dashboard
 ───────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   CopyButton — inline copy with tick feedback
+───────────────────────────────────────────────────────────── */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    }
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1.5 rounded-lg transition-all hover:bg-white/10"
+      style={{ color: copied ? '#34d399' : 'rgba(255,255,255,0.3)' }}
+      aria-label={copied ? 'Copied!' : 'Copy text'}
+      title={copied ? 'Copied!' : 'Copy to clipboard'}
+    >
+      {copied ? <CheckIcon size={12} /> : <Copy size={12} />}
+    </button>
+  );
+}
+
 export function NotaForgeDashboard() {
-  const { notes, loading, realtimeConnected, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
+  const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
   const isMobile = useIsMobile();
   const { isAdmin, login, logout, loading: authLoading } = useAdminAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -550,29 +590,7 @@ export function NotaForgeDashboard() {
                 <rect width="100" height="100" rx="20" fill="#000" stroke="#fff" strokeWidth="4"/>
                 <path d="M30 70 L50 30 L70 70" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round"/>
               </svg>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold tracking-tight">NotaForge</span>
-                {/* Realtime indicator */}
-                <div
-                  title={realtimeConnected ? 'Live — syncing in real time' : 'Connecting…'}
-                  className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all"
-                  style={{
-                    background: realtimeConnected ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${realtimeConnected ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.1)'}`,
-                    color: realtimeConnected ? '#34d399' : 'rgba(255,255,255,0.3)',
-                  }}
-                >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full shrink-0"
-                    style={{
-                      background: realtimeConnected ? '#34d399' : 'rgba(255,255,255,0.2)',
-                      boxShadow: realtimeConnected ? '0 0 6px #34d399' : 'none',
-                      animation: realtimeConnected ? 'pulse 2s ease-in-out infinite' : 'none',
-                    }}
-                  />
-                  {realtimeConnected ? 'Live' : '…'}
-                </div>
-              </div>
+              <span className="font-semibold tracking-tight">NotaForge</span>
             </div>
           </div>
 
