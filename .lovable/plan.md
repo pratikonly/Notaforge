@@ -1,116 +1,69 @@
+# Discord Logger for New Notes
 
+Mirror every newly created note to Discord, routed into 4 channels by content type.
 
-# Admin Mode for NotaForge
+## Channel routing
 
-## Overview
+| Channel | Used for |
+|---|---|
+| **Text** webhook | `note_type === 'text'` notes (title + content embed) |
+| **Images** webhook | Image files (jpg/png/gif/webp/heic…) |
+| **Links** webhook | Notes with `link_url` set |
+| **Files** webhook | Everything else: pdf, docx, audio, video, zip, etc. |
 
-Add a role-based system where anyone can add notes, but only an admin can edit or delete them. A toggle button on the right side of the navbar (mirroring the "Made by Pratik" button on the left) lets users switch between "Public" and "Admin" mode via an email/password login popup.
+A note with both text and an attachment posts to the attachment's channel; a note with a link goes to Links.
 
----
+## File-size behavior (per attachment)
 
-## How It Works
+1. **≤ 10 MB** → attach the file directly to the Discord message.
+2. **> 10 MB** → fall back to a metadata embed only:
+   - Title, note type, file type/MIME, file size (MB), created date, link to the Cloudinary URL.
+   - No compression attempted (per your choice).
 
-- **Public mode (default)**: Users can view and add notes. Edit/delete buttons are hidden.
-- **Admin mode**: After logging in with email + password, edit/delete buttons appear. Admin can also log out to return to public mode.
-- The role toggle button sits on the right side of the navbar with a green default color.
+Discord webhook hard limits are respected: 10 MB upload cap, 8 attachments max, 6000-char embed total.
 
----
+## Trigger
 
-## Changes Required
+- **Database webhook** on `INSERT` into `public.notes` → calls a new edge function `discord-logger`.
+- This works no matter where the note came from (web, mobile, future API).
+- The webhook is created via SQL using `pg_net` to POST to the edge function, signed with `KEEP_ALIVE_SECRET`-style shared secret (new secret: `DISCORD_LOGGER_SECRET`).
 
-### 1. Create Admin Auth Hook
+## Secrets to add
 
-**New file**: `src/hooks/useAdminAuth.ts`
+- `DISCORD_WEBHOOK_TEXT`
+- `DISCORD_WEBHOOK_IMAGES`
+- `DISCORD_WEBHOOK_LINKS`
+- `DISCORD_WEBHOOK_FILES`
+- `DISCORD_LOGGER_SECRET` (random, used to authenticate the DB → function call)
 
-- Uses the existing authentication system (Supabase Auth)
-- Provides `isAdmin`, `login(email, password)`, `logout()`, and `loading` state
-- Listens to auth state changes
-- Admin = any authenticated user (since the app is public-first, logging in itself grants admin privileges)
+I'll request these via the secrets tool once you approve. You'll create each webhook in Discord (Channel → Edit → Integrations → Webhooks → New Webhook → Copy URL) and paste them in.
 
-### 2. Create Admin Login Popup
+## Edge function: `supabase/functions/discord-logger/index.ts`
 
-**New file**: `src/components/AdminLoginModal.tsx`
+- Verifies the shared secret header.
+- Parses the inserted note row from the DB-webhook payload.
+- Picks the correct webhook URL based on type/extension.
+- Builds a rich embed:
+  - Title (note title), description (truncated content), fields: type, size, filename, created_at, author = "NotaForge".
+  - Color-coded per channel (text=blue, images=purple, links=green, files=amber).
+  - Thumbnail = image URL for image notes.
+- If file ≤ 10 MB → `fetch` the Cloudinary URL, then `multipart/form-data` POST to webhook with embed + file.
+- If > 10 MB → POST embed only with a "Download" link button (Discord link in embed).
+- Returns 200 even on Discord failure (logs error), so DB webhook doesn't retry forever.
 
-- A modal/dialog with email and password fields
-- Submit button to log in
-- Error handling for wrong credentials
-- Closes on successful login
+## Migration
 
-### 3. Update Navbar - Add Role Toggle Button
+- Create a `pg_net` trigger or Supabase database webhook on `notes` INSERT.
+- Approach: small SQL migration enabling `pg_net` and a trigger function `notify_discord_logger()` that does `net.http_post(...)` to the edge function URL with the new row as JSON.
 
-**File**: `src/components/NotaForgeDashboard.tsx`
+## Files
 
-- Replace the right spacer (`w-[200px] mr-16`) with a role toggle button
-- **Desktop**: Pill-shaped button similar to "Made by Pratik" on the left
-  - Default state: Green background, shows "Public" text
-  - Hover: Slightly lighter green
-  - When clicked (not admin): Opens login popup
-  - When admin: Shows "Admin" with a logout option
-- **Mobile**: Same button replaces the right blank spacer
+- New: `supabase/functions/discord-logger/index.ts`
+- New: migration creating `notify_discord_logger()` trigger + enabling `pg_net`
+- No frontend changes.
 
-### 4. Hide Edit/Delete for Non-Admins
+## Out of scope
 
-**File**: `src/components/NotaForgeDashboard.tsx`
-
-- Pass `isAdmin` state throughout the component
-- On note cards: Hide the Pencil (edit) and Trash (delete) icon buttons when not admin
-- In the popup modal: Hide the edit button when not admin
-- The "Add Note" form remains available to everyone
-
-### 5. Ensure Auth Works with Existing Setup
-
-The authentication system is already configured in the Supabase client. The notes table has public RLS policies (anyone can CRUD), so:
-- Public users can still INSERT (add notes)
-- Edit/delete restrictions are enforced at the UI level (buttons hidden for non-admins)
-- The existing public RLS policies remain unchanged
-
----
-
-## Technical Details
-
-### Button Design (Right Side)
-
-```text
-Default (Public):
-- Background: bg-green-600/80 with backdrop-blur
-- Text: "Public" in white
-- Border: border-green-500/50
-- Hover: bg-green-500/80
-
-Admin (Logged In):
-- Background: bg-amber-600/80 with backdrop-blur  
-- Text: "Admin" in white
-- Border: border-amber-500/50
-- Click: Shows logout option
-```
-
-### Admin Login Modal
-
-```text
-- Dark themed modal matching the app
-- Email input field
-- Password input field
-- "Login as Admin" button
-- Error message area
-- Close/cancel button
-```
-
-### File Summary
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/hooks/useAdminAuth.ts` | Create | Auth hook with login/logout/isAdmin |
-| `src/components/AdminLoginModal.tsx` | Create | Email/password login popup |
-| `src/components/NotaForgeDashboard.tsx` | Modify | Add role button to navbar, conditionally show edit/delete |
-
----
-
-## User Flow
-
-1. User visits site -- sees "Public" green button on right, can only add notes
-2. User clicks "Public" button -- login popup appears
-3. User enters admin email/password -- logs in
-4. Button changes to "Admin" (amber color) -- edit/delete buttons now visible on all notes
-5. Admin clicks "Admin" button -- gets logout option
-6. Admin logs out -- back to public mode, edit/delete hidden again
-
+- Compression (skipped per your choice).
+- Updates/deletes (only INSERT logs, per your wording "every new notes added").
+- Retry queue (single attempt, errors logged to function logs).
