@@ -177,7 +177,7 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
               {isAdmin && (
                 <button
                   onClick={handleDelete}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:bg-white/10"
                   style={{
                     color: confirmDelete ? '#f87171' : 'rgba(255,255,255,0.3)',
                     background: confirmDelete ? 'rgba(239,68,68,0.15)' : 'transparent',
