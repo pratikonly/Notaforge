@@ -36,6 +36,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { AdminLoginModal } from '@/components/AdminLoginModal';
 import { NoteDetailModal } from '@/components/NoteDetailModal.tsx';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 /* ─────────────────────────────────────────────────────────────
    Constants
@@ -448,8 +452,14 @@ export function NotaForgeDashboard() {
     resetForm(); setIsSubmitting(false); setMobileFormOpen(false);
   };
 
-  const handleDelete = async (id: string, title?: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${title || 'this note'}"? This cannot be undone.`)) return;
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const handleDelete = (id: string, title?: string) => {
+    setDeleteTarget({ id, title: title || 'this note' });
+  };
+  const confirmDeleteNote = async () => {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    setDeleteTarget(null);
     await deleteNote(id);
   };
   const formatTimestamp = (date: string) => format(new Date(date), 'dd/MM/yy · HH:mm');
@@ -861,6 +871,26 @@ export function NotaForgeDashboard() {
       )}
 
       <AdminLoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} onLogin={login} />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{deleteTarget?.title}" will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteNote}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
