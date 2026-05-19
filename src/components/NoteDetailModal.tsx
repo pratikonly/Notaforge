@@ -4,6 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   X, Pencil, Download, ExternalLink, FileIcon, Trash2,
   Music, Video, Link2, FileText, ZoomIn, ZoomOut,
   RotateCw, ChevronLeft, ChevronRight, Check, Maximize2, Copy
@@ -76,7 +80,10 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete "${note.title}"? This cannot be undone.`)) return;
+    setConfirmDelete(true);
+  };
+  const performDelete = async () => {
+    setConfirmDelete(false);
     await onDelete(note.id);
     onClose();
   };
