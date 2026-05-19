@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
-  X, Pencil, Download, ExternalLink, FileIcon,
+  X, Pencil, Download, ExternalLink, FileIcon, Trash2,
   Music, Video, Link2, FileText, ZoomIn, ZoomOut,
   RotateCw, ChevronLeft, ChevronRight, Check, Maximize2, Copy
 } from 'lucide-react';
@@ -185,7 +185,7 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
                   aria-label={confirmDelete ? 'Confirm delete' : 'Delete'}
                   title={confirmDelete ? 'Click again to confirm' : 'Delete note'}
                 >
-                  <X size={14} />
+                  <Trash2 size={14} />
                 </button>
               )}
               <button
