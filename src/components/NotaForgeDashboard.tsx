@@ -448,7 +448,10 @@ export function NotaForgeDashboard() {
     resetForm(); setIsSubmitting(false); setMobileFormOpen(false);
   };
 
-  const handleDelete = async (id: string) => { await deleteNote(id); };
+  const handleDelete = async (id: string, title?: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${title || 'this note'}"? This cannot be undone.`)) return;
+    await deleteNote(id);
+  };
   const formatTimestamp = (date: string) => format(new Date(date), 'dd/MM/yy · HH:mm');
 
   // Bug fix: fetch() fails silently on Cloudinary raw/file URLs due to CORS.
@@ -775,7 +778,7 @@ export function NotaForgeDashboard() {
                             <Pencil size={11} />
                           </button>
                           <button
-                            onClick={e => { e.stopPropagation(); handleDelete(note.id); }}
+                            onClick={e => { e.stopPropagation(); handleDelete(note.id, note.title); }}
                             className="p-1.5 rounded-lg transition-colors"
                             style={{ color: 'rgba(248,113,113,0.55)' }}
                             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.12)')}
