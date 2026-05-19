@@ -76,7 +76,7 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
   };
 
   const handleDelete = async () => {
-    if (!confirmDelete) { setConfirmDelete(true); return; }
+    if (!window.confirm(`Are you sure you want to delete "${note.title}"? This cannot be undone.`)) return;
     await onDelete(note.id);
     onClose();
   };
