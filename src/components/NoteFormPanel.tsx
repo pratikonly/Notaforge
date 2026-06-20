@@ -7,7 +7,10 @@ import {
   ExternalLink,
   X,
   Check,
-  Upload
+  Upload,
+  Music,
+  Video,
+  FileIcon,
 } from 'lucide-react';
 import { MAX_FILE_SIZE_LABEL } from '@/lib/telegram';
 import { Button } from '@/components/ui/button';
@@ -259,15 +262,19 @@ export function NoteFormPanel({
             </div>
           )}
 
-          {/* File Preview */}
-          {noteType === 'file' && fileUrls.length > 0 && (
+          {/* File / PDF / Video / Audio Preview */}
+          {(noteType === 'file' || noteType === 'pdf' || noteType === 'video' || noteType === 'audio') && fileUrls.length > 0 && (
             <div className="flex items-center gap-2 p-2 bg-secondary rounded border border-border">
-              {fileNames[0]?.toLowerCase().endsWith('.pdf') ? (
-                <div className="w-6 h-7 bg-destructive rounded flex items-center justify-center">
+              {noteType === 'pdf' || fileNames[0]?.toLowerCase().endsWith('.pdf') ? (
+                <div className="w-6 h-7 bg-destructive rounded flex items-center justify-center shrink-0">
                   <span className="text-white text-[8px] font-bold">PDF</span>
                 </div>
+              ) : noteType === 'video' ? (
+                <Video size={16} className="text-pink-400 shrink-0" />
+              ) : noteType === 'audio' ? (
+                <Music size={16} className="text-emerald-400 shrink-0" />
               ) : (
-                <FileText size={16} className="text-white shrink-0" />
+                <FileIcon size={16} className="text-white shrink-0" />
               )}
               <span className="text-sm truncate">{fileNames[0]}</span>
             </div>
