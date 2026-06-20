@@ -252,6 +252,8 @@ export function NotaForgeDashboard() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoErrors, setVideoErrors]   = useState<Set<string>>(new Set());
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const progressHistory = useRef<{ t: number; pct: number }[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isDragging, setIsDragging]     = useState(false);
   const [mobileFormOpen, setMobileFormOpen] = useState(false);
@@ -309,16 +311,42 @@ export function NotaForgeDashboard() {
       if (file.size > MAX_FILE_SIZE) { alert(`"${file.name}" exceeds ${MAX_FILE_SIZE_LABEL}`); return; }
     }
     setIsUploading(true); setUploadSuccess(false); setUploadProgress(0);
+    setTimeRemaining(null);
+    progressHistory.current = [];
+
+    const trackProgress = (pct: number) => {
+      const now = Date.now();
+      const history = progressHistory.current;
+      history.push({ t: now, pct });
+      // Keep only the last 8 seconds of samples for a rolling-window estimate
+      while (history.length > 1 && now - history[0].t > 8000) history.shift();
+      // Need ≥2 samples, some elapsed time, and real progress to estimate
+      if (history.length >= 2) {
+        const oldest = history[0];
+        const newest = history[history.length - 1];
+        const elapsed = newest.t - oldest.t;
+        const gained  = newest.pct - oldest.pct;
+        if (elapsed > 800 && gained > 0) {
+          const pctPerMs  = gained / elapsed;
+          const remaining = 100 - pct;
+          const msLeft    = remaining / pctPerMs;
+          setTimeRemaining(Math.max(1, Math.round(msLeft / 1000)));
+        }
+      }
+      setUploadProgress(pct);
+    };
+
     const urls: string[] = [], names: string[] = [];
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       const baseOffset = Math.round((i / filesToUpload.length) * 100);
       const url = await uploadFile(file, (pct) => {
-        setUploadProgress(baseOffset + Math.round(pct / filesToUpload.length));
+        trackProgress(baseOffset + Math.round(pct / filesToUpload.length));
       });
       if (url) { urls.push(url); names.push(file.name); }
     }
     setUploadProgress(100);
+    setTimeRemaining(null);
     setIsUploading(false);
     if (urls.length > 0) {
       setFileUrls(p => [...p, ...urls]); setFileNames(p => [...p, ...names]);
@@ -531,7 +559,7 @@ export function NotaForgeDashboard() {
   const sharedFormProps = {
     title, setTitle, content, setContent, noteType, setNoteType,
     linkUrl, setLinkUrl, fileUrls, fileNames, isSubmitting, isUploading,
-    uploadSuccess, uploadProgress, isDragging, handleDragOver, handleDragLeave,
+    uploadSuccess, uploadProgress, timeRemaining, isDragging, handleDragOver, handleDragLeave,
     handleDrop, handleFileUpload, handleSubmit, clearAttachment, removeImage,
   };
 

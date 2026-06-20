@@ -34,6 +34,7 @@ interface NoteFormPanelProps {
   isUploading: boolean;
   uploadSuccess: boolean;
   uploadProgress: number;
+  timeRemaining: number | null;
   isDragging: boolean;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragLeave: (e: React.DragEvent) => void;
@@ -60,6 +61,7 @@ export function NoteFormPanel({
   isUploading,
   uploadSuccess,
   uploadProgress,
+  timeRemaining,
   isDragging,
   handleDragOver,
   handleDragLeave,
@@ -183,7 +185,13 @@ export function NoteFormPanel({
       {isUploading && (
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-muted-foreground">Uploading…</span>
+            <span className="text-xs text-muted-foreground">
+              {timeRemaining !== null
+                ? timeRemaining >= 60
+                  ? `${Math.floor(timeRemaining / 60)}m ${timeRemaining % 60}s left`
+                  : `${timeRemaining}s left`
+                : 'Uploading…'}
+            </span>
             <span className="text-xs text-muted-foreground">{uploadProgress}%</span>
           </div>
           <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
