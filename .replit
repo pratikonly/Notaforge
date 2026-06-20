@@ -33,6 +33,6 @@ externalPort = 80
 [userenv]
 
 [userenv.shared]
-VITE_SUPABASE_URL = "https://ffhfmdfvqmfktkohdnlm.supabase.co"
-VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaGZtZGZ2cW1ma3Rrb2hkbmxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5MDc3OTUsImV4cCI6MjA4NDQ4Mzc5NX0.peKkfX81SGJRjX7VNGe_mVwwbZlqYLMoqgcg4RNTog4"
-VITE_SUPABASE_PROJECT_ID = "ffhfmdfvqmfktkohdnlm"
+VITE_SUPABASE_URL = "https://xofnbmqxyfjbfvsqvogd.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZm5ibXF4eWZqYmZ2c3F2b2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NDMyMzEsImV4cCI6MjA5NzUxOTIzMX0.NXEr7aE4n33RRltAd8kfDZyXQ4YgVidSrXpWkElVwUw"
+VITE_SUPABASE_PROJECT_ID = "xofnbmqxyfjbfvsqvogd"
