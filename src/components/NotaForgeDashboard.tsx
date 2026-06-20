@@ -251,6 +251,7 @@ export function NotaForgeDashboard() {
   const [isUploading, setIsUploading]   = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [videoErrors, setVideoErrors]   = useState<Set<string>>(new Set());
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isDragging, setIsDragging]     = useState(false);
   const [mobileFormOpen, setMobileFormOpen] = useState(false);
@@ -467,7 +468,20 @@ export function NotaForgeDashboard() {
         return note.file_url ? (
           <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden"
                style={{ background: 'rgba(0,0,0,0.45)' }}>
-            <video src={note.file_url} className="max-w-full max-h-full" muted preload="metadata" />
+            {videoErrors.has(note.id) ? (
+              <div className="flex flex-col items-center justify-center gap-2">
+                <Video size={20} style={{ color: '#f472b6' }} />
+                <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>Video</span>
+              </div>
+            ) : (
+              <video
+                src={note.file_url}
+                className="max-w-full max-h-full"
+                muted
+                preload="metadata"
+                onError={() => setVideoErrors(prev => new Set([...prev, note.id]))}
+              />
+            )}
           </div>
         ) : null;
       case 'audio':

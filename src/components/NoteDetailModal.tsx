@@ -10,7 +10,7 @@ import {
 import {
   X, Pencil, Download, ExternalLink, FileIcon, Trash2,
   Music, Video, Link2, FileText, ZoomIn, ZoomOut,
-  RotateCw, ChevronLeft, ChevronRight, Check, Maximize2, Copy
+  RotateCw, ChevronLeft, ChevronRight, Check, Maximize2, Copy, Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -52,6 +52,9 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
   const [lightbox, setLightbox]       = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [videoLoaded, setVideoLoaded]   = useState(false);
+  const [videoError, setVideoError]     = useState(false);
+  const [pdfLoaded, setPdfLoaded]       = useState(false);
   const ac = getAccent(note.note_type);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -315,14 +318,36 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
             {/* ── VIDEO ── */}
             {note.note_type === 'video' && note.file_url && (
               <div className="space-y-3">
-                <div className="rounded-2xl overflow-hidden border border-white/8"
-                     style={{ background: '#000' }}>
-                  <video
-                    src={note.file_url}
-                    controls
-                    className="w-full"
-                    style={{ maxHeight: '400px', display: 'block' }}
-                  />
+                <div className="rounded-2xl overflow-hidden border border-white/8 relative"
+                     style={{ background: '#000', minHeight: '200px' }}>
+                  {/* Loading spinner — shown until metadata arrives */}
+                  {!videoLoaded && !videoError && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
+                      <Loader2 size={22} className="animate-spin" style={{ color: 'rgba(244,114,182,0.7)' }} />
+                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Loading video…</span>
+                    </div>
+                  )}
+                  {/* Error fallback */}
+                  {videoError && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                      <Video size={28} style={{ color: '#f472b6' }} />
+                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Preview unavailable</span>
+                      <a href={note.file_url} target="_blank" rel="noopener noreferrer"
+                         className="text-xs underline" style={{ color: '#f472b6' }}>
+                        Open in new tab
+                      </a>
+                    </div>
+                  )}
+                  {!videoError && (
+                    <video
+                      src={note.file_url}
+                      controls
+                      className="w-full"
+                      style={{ maxHeight: '400px', display: videoLoaded ? 'block' : 'none' }}
+                      onLoadedMetadata={() => setVideoLoaded(true)}
+                      onError={() => setVideoError(true)}
+                    />
+                  )}
                 </div>
                 <DownloadRow url={note.file_url} name={note.file_name || 'video'} onDownload={onDownload} color="#f472b6" />
               </div>
@@ -380,14 +405,25 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
               <div className="space-y-4">
                 {isPdf ? (
                   <>
-                    {/* PDF inline viewer */}
-                    <div className="rounded-2xl overflow-hidden border border-white/10"
-                         style={{ background: '#fff' }}>
+                    {/* PDF inline viewer with loading state */}
+                    <div className="rounded-2xl overflow-hidden border border-white/10 relative"
+                         style={{ background: '#1a1a2e', minHeight: '420px' }}>
+                      {!pdfLoaded && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
+                          <Loader2 size={22} className="animate-spin" style={{ color: 'rgba(96,165,250,0.7)' }} />
+                          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Loading PDF…</span>
+                          <a href={note.file_url} target="_blank" rel="noopener noreferrer"
+                             className="text-xs underline mt-1" style={{ color: '#60a5fa' }}>
+                            Open in new tab instead
+                          </a>
+                        </div>
+                      )}
                       <iframe
                         src={note.file_url}
                         title={note.file_name || 'PDF'}
                         className="w-full"
-                        style={{ height: '420px', border: 'none', display: 'block' }}
+                        style={{ height: '420px', border: 'none', display: pdfLoaded ? 'block' : 'none' }}
+                        onLoad={() => setPdfLoaded(true)}
                       />
                     </div>
                     <DownloadRow url={note.file_url} name={note.file_name || 'document.pdf'} onDownload={onDownload} color="#60a5fa" />

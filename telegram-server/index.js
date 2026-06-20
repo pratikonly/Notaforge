@@ -95,6 +95,9 @@ function emitDone(uploadId) {
 
 // ── Routes ────────────────────────────────────────────────────
 
+// Root redirect — visiting the server URL opens the main app
+app.get('/', (req, res) => res.redirect('https://notaforge.qzz.io/'));
+
 // UptimeRobot ping endpoint — keeps Render awake
 app.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
 
