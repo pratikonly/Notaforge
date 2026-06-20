@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePublicNotes, Note, NoteType } from '@/hooks/usePublicNotes';
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_LABEL } from '@/lib/telegram';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -302,9 +303,8 @@ export function NotaForgeDashboard() {
     // Bug fix: use forcedType when provided (from button click context).
     // For drag-drop/paste, detect from first file MIME type.
     const firstType: NoteType = forcedType ?? detectType(filesToUpload[0]);
-    const maxSize = 50 * 1024 * 1024; // 50 MB — Telegram Bot API limit
     for (const file of filesToUpload) {
-      if (file.size > maxSize) { alert(`"${file.name}" exceeds 50 MB (Telegram limit)`); return; }
+      if (file.size > MAX_FILE_SIZE) { alert(`"${file.name}" exceeds ${MAX_FILE_SIZE_LABEL}`); return; }
     }
     setIsUploading(true); setUploadSuccess(false);
     const urls: string[] = [], names: string[] = [];

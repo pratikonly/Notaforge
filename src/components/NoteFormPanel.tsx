@@ -9,6 +9,7 @@ import {
   Check,
   Upload
 } from 'lucide-react';
+import { MAX_FILE_SIZE_LABEL } from '@/lib/telegram';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -164,7 +165,7 @@ export function NoteFormPanel({
       {/* Upload Limits & Success */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs text-muted-foreground">
-          Max 5 files · 50 MB per file · Any type supported
+          Max 5 files · {MAX_FILE_SIZE_LABEL} per file · Any type supported
         </p>
         {uploadSuccess && (
           <span className="text-xs text-green-500 flex items-center gap-1">
