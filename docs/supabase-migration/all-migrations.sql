@@ -24,54 +24,7 @@ DO $$ BEGIN
   CREATE TYPE public.app_role AS ENUM ('admin', 'user');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- ── FUNCTIONS ────────────────────────────────────────────────
-
--- Checks whether a user has a given role (used by RLS + frontend RPC)
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
-RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
-SET search_path = public AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = _user_id AND role = _role
-  )
-$$;
-
--- Auto-updates updated_at on row changes
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$;
-
--- Cleans up keep_alive_logs older than 7 days (scheduled via pg_cron)
-CREATE OR REPLACE FUNCTION public.cleanup_keep_alive_logs()
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  DELETE FROM public.keep_alive_logs WHERE created_at < now() - interval '7 days';
-END;
-$$;
-
--- Fires after INSERT on notes → calls discord-logger edge function
-CREATE OR REPLACE FUNCTION public.notify_discord_logger()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public, extensions AS $$
-BEGIN
-  BEGIN
-    PERFORM net.http_post(
-      url     := 'https://xofnbmqxyfjbfvsqvogd.supabase.co/functions/v1/discord-logger',
-      headers := jsonb_build_object('Content-Type', 'application/json'),
-      body    := jsonb_build_object('record', to_jsonb(NEW))
-    );
-  EXCEPTION WHEN OTHERS THEN
-    NULL; -- never block the insert
-  END;
-  RETURN NEW;
-END;
-$$;
-
--- ── TABLES ───────────────────────────────────────────────────
+-- ── TABLES (created first so functions can reference them) ───
 
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id      uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -119,6 +72,53 @@ CREATE INDEX IF NOT EXISTS idx_keep_alive_logs_status     ON public.keep_alive_l
 
 -- Needed for realtime change tracking
 ALTER TABLE public.notes REPLICA IDENTITY FULL;
+
+-- ── FUNCTIONS (after tables so SQL functions can resolve refs) 
+
+-- Checks whether a user has a given role (used by RLS + frontend RPC)
+CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = _user_id AND role = _role
+  )
+$$;
+
+-- Auto-updates updated_at on row changes
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+-- Cleans up keep_alive_logs older than 7 days (scheduled via pg_cron)
+CREATE OR REPLACE FUNCTION public.cleanup_keep_alive_logs()
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  DELETE FROM public.keep_alive_logs WHERE created_at < now() - interval '7 days';
+END;
+$$;
+
+-- Fires after INSERT on notes → calls discord-logger edge function
+CREATE OR REPLACE FUNCTION public.notify_discord_logger()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, extensions AS $$
+BEGIN
+  BEGIN
+    PERFORM net.http_post(
+      url     := 'https://xofnbmqxyfjbfvsqvogd.supabase.co/functions/v1/discord-logger',
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body    := jsonb_build_object('record', to_jsonb(NEW))
+    );
+  EXCEPTION WHEN OTHERS THEN
+    NULL; -- never block the insert
+  END;
+  RETURN NEW;
+END;
+$$;
 
 -- ── TRIGGERS ─────────────────────────────────────────────────
 DROP TRIGGER IF EXISTS update_notes_updated_at ON public.notes;
