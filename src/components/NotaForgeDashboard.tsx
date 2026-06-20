@@ -250,6 +250,7 @@ export function NotaForgeDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading]   = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isDragging, setIsDragging]     = useState(false);
   const [mobileFormOpen, setMobileFormOpen] = useState(false);
@@ -306,17 +307,24 @@ export function NotaForgeDashboard() {
     for (const file of filesToUpload) {
       if (file.size > MAX_FILE_SIZE) { alert(`"${file.name}" exceeds ${MAX_FILE_SIZE_LABEL}`); return; }
     }
-    setIsUploading(true); setUploadSuccess(false);
+    setIsUploading(true); setUploadSuccess(false); setUploadProgress(0);
     const urls: string[] = [], names: string[] = [];
-    for (const file of filesToUpload) {
-      const url = await uploadFile(file);
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const file = filesToUpload[i];
+      const baseOffset = Math.round((i / filesToUpload.length) * 100);
+      const url = await uploadFile(file, (pct) => {
+        setUploadProgress(baseOffset + Math.round(pct / filesToUpload.length));
+      });
       if (url) { urls.push(url); names.push(file.name); }
     }
+    setUploadProgress(100);
     setIsUploading(false);
     if (urls.length > 0) {
       setFileUrls(p => [...p, ...urls]); setFileNames(p => [...p, ...names]);
       setNoteType(firstType); setUploadSuccess(true);
-      setTimeout(() => setUploadSuccess(false), 3000);
+      setTimeout(() => { setUploadSuccess(false); setUploadProgress(0); }, 3000);
+    } else {
+      setUploadProgress(0);
     }
   }, [uploadFile, fileUrls.length]);
 
@@ -509,7 +517,7 @@ export function NotaForgeDashboard() {
   const sharedFormProps = {
     title, setTitle, content, setContent, noteType, setNoteType,
     linkUrl, setLinkUrl, fileUrls, fileNames, isSubmitting, isUploading,
-    uploadSuccess, isDragging, handleDragOver, handleDragLeave,
+    uploadSuccess, uploadProgress, isDragging, handleDragOver, handleDragLeave,
     handleDrop, handleFileUpload, handleSubmit, clearAttachment, removeImage,
   };
 

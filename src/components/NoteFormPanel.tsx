@@ -30,6 +30,7 @@ interface NoteFormPanelProps {
   isSubmitting: boolean;
   isUploading: boolean;
   uploadSuccess: boolean;
+  uploadProgress: number;
   isDragging: boolean;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragLeave: (e: React.DragEvent) => void;
@@ -55,6 +56,7 @@ export function NoteFormPanel({
   isSubmitting,
   isUploading,
   uploadSuccess,
+  uploadProgress,
   isDragging,
   handleDragOver,
   handleDragLeave,
@@ -163,7 +165,7 @@ export function NoteFormPanel({
       )}
 
       {/* Upload Limits & Success */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <p className="text-xs text-muted-foreground">
           Max 5 files · {MAX_FILE_SIZE_LABEL} per file · Any type supported
         </p>
@@ -173,6 +175,22 @@ export function NoteFormPanel({
           </span>
         )}
       </div>
+
+      {/* Upload Progress Bar */}
+      {isUploading && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted-foreground">Uploading…</span>
+            <span className="text-xs text-muted-foreground">{uploadProgress}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+            <div
+              className="h-full bg-white rounded-full transition-all duration-200 ease-out"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
       
       {/* Add Note Button */}
       <Button

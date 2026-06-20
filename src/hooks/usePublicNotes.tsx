@@ -189,9 +189,12 @@ export function usePublicNotes() {
     }
   }, [toast]);
 
-  const uploadFile = useCallback(async (file: File): Promise<string | null> => {
+  const uploadFile = useCallback(async (
+    file: File,
+    onProgress?: (pct: number) => void,
+  ): Promise<string | null> => {
     try {
-      const result = await uploadToTelegram(file);
+      const result = await uploadToTelegram(file, onProgress);
       if (!result) throw new Error('Upload returned no result');
       return result.url;
     } catch (error: any) {
