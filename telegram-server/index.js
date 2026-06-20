@@ -57,16 +57,36 @@ const client = new TelegramClient(
   new StringSession(SESSION_STR),
   API_ID,
   API_HASH,
-  { connectionRetries: 5, useWSS: false }
+  {
+    connectionRetries: 10,
+    retryDelay: 2000,
+    autoReconnect: true,   // reconnect automatically after any drop
+    useWSS: false,
+  }
 );
 
 let channelEntity = null;
 
+
 async function ensureConnected() {
-  if (!client.connected) {
+  // Verify the connection is truly alive with a lightweight API call.
+  // client.connected can be stale after a silent TCP drop.
+  try {
+    if (!client.connected) {
+      await client.connect();
+      console.log('Connected to Telegram');
+    } else {
+      // Ping Telegram — if this throws, the socket is dead
+      await client.getMe();
+    }
+  } catch {
+    console.log('Connection check failed — reconnecting...');
+    channelEntity = null;
+    try { await client.disconnect(); } catch {}
     await client.connect();
-    console.log('Connected to Telegram');
+    console.log('Reconnected to Telegram');
   }
+
   if (!channelEntity) {
     await client.getDialogs({ limit: 50 });
     channelEntity = await client.getEntity(BigInt(CHANNEL_ID_STR));
@@ -74,6 +94,20 @@ async function ensureConnected() {
   }
   return channelEntity;
 }
+
+// ── Telegram keepalive ────────────────────────────────────────
+// Telegram closes idle MTProto connections after ~5–10 minutes.
+// Ping every 4 minutes to keep the socket alive between uploads.
+setInterval(async () => {
+  try {
+    await client.getMe();
+  } catch (err) {
+    console.log('Keepalive ping failed — reconnecting:', err.message);
+    channelEntity = null;
+    try { await client.disconnect(); } catch {}
+    await client.connect().catch(() => {});
+  }
+}, 4 * 60 * 1000);
 
 // ── SSE progress store ────────────────────────────────────────
 // Maps uploadId → SSE response object so the upload handler can
