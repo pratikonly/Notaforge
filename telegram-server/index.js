@@ -68,7 +68,6 @@ async function ensureConnected() {
     console.log('Connected to Telegram');
   }
   if (!channelEntity) {
-    // Populate entity cache so getEntity can resolve by ID
     await client.getDialogs({ limit: 50 });
     channelEntity = await client.getEntity(BigInt(CHANNEL_ID_STR));
     console.log('Channel entity resolved:', channelEntity.title ?? CHANNEL_ID_STR);
@@ -76,14 +75,59 @@ async function ensureConnected() {
   return channelEntity;
 }
 
+// ── SSE progress store ────────────────────────────────────────
+// Maps uploadId → SSE response object so the upload handler can
+// push real Telegram upload percentages back to the browser.
+const progressClients = new Map();
+
+function emitProgress(uploadId, pct) {
+  const res = progressClients.get(uploadId);
+  if (res) res.write(`data: ${pct}\n\n`);
+}
+
+function emitDone(uploadId) {
+  const res = progressClients.get(uploadId);
+  if (res) {
+    res.write('event: done\ndata: 100\n\n');
+    progressClients.delete(uploadId);
+  }
+}
+
 // ── Routes ────────────────────────────────────────────────────
 
 // UptimeRobot ping endpoint — keeps Render awake
 app.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
 
-// Upload endpoint — accepts any file up to 2 GB
+// SSE progress endpoint — browser subscribes before starting upload.
+// The upload handler pushes real Telegram upload % here in real time.
+app.get('/progress/:uploadId', (req, res) => {
+  const { uploadId } = req.params;
+
+  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection',    'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // disable Nginx buffering on Render
+  res.flushHeaders();
+
+  progressClients.set(uploadId, res);
+
+  // Heartbeat every 20 s — prevents Render's proxy from closing the connection
+  const heartbeat = setInterval(() => {
+    res.write(':heartbeat\n\n');
+  }, 20000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    progressClients.delete(uploadId);
+  });
+});
+
+// Upload endpoint — accepts any file up to 2 GB.
+// Pass ?uploadId=<id> to receive real-time progress via the SSE endpoint above.
 app.post('/upload', upload.single('file'), async (req, res) => {
   const tempPath = req.file?.path;
+  const uploadId = req.query.uploadId || null;
+
   try {
     if (!req.file) return res.status(400).json({ error: 'No file provided' });
 
@@ -92,16 +136,22 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 
     const peer = await ensureConnected();
 
-    // Upload file bytes to Telegram servers
-    // workers: 16 uploads 16 chunks in parallel — ~4x faster than the old workers: 4
+    // Upload file bytes to Telegram servers.
+    // workers: 16 uploads 16 chunks in parallel — ~4x faster than workers: 4.
+    // onProgress pushes the real percentage to the browser via SSE.
     const tgFile = await client.uploadFile({
       file: new CustomFile(originalname, size, tempPath),
       workers: 16,
-      onProgress: (pct) => process.stdout.write(`\rUpload ${(pct * 100).toFixed(0)}%  `),
+      onProgress: (pct) => {
+        const p = Math.round(pct * 100);
+        process.stdout.write(`\rUpload ${p}%  `);
+        if (uploadId) emitProgress(uploadId, p);
+      },
     });
     console.log(`\nUpload complete, sending to channel...`);
 
-    // Post to channel — gets a permanent message ID
+    if (uploadId) emitDone(uploadId);
+
     const message = await client.sendFile(peer, {
       file: tgFile,
       forceDocument: true,
@@ -116,6 +166,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 
   } catch (err) {
     console.error('Upload error:', err);
+    if (uploadId) progressClients.delete(uploadId);
     res.status(500).json({ error: String(err) });
   } finally {
     if (tempPath) fs.unlink(tempPath, () => {});
@@ -151,8 +202,7 @@ app.get('/file/:msgId', async (req, res) => {
       thumbSize:     '',
     });
 
-    const CHUNK = 512 * 1024; // 512 KB — chunk size for streaming
-    // Telegram MTProto requires offsets aligned to 4096 bytes
+    const CHUNK = 512 * 1024;
     const ALIGN = 4096;
 
     res.setHeader('Content-Type', mimeType);
@@ -163,13 +213,11 @@ app.get('/file/:msgId', async (req, res) => {
     const rangeHeader = req.headers.range;
 
     if (rangeHeader) {
-      // ── Partial content (browser seek / video metadata fetch) ──
       const [startStr, endStr] = rangeHeader.replace(/bytes=/, '').split('-');
       const start  = parseInt(startStr, 10) || 0;
       const end    = endStr ? Math.min(parseInt(endStr, 10), fileSize - 1) : fileSize - 1;
       const length = end - start + 1;
 
-      // Align the download start down to the nearest ALIGN boundary
       const alignedStart = Math.floor(start / ALIGN) * ALIGN;
       const skipBytes    = start - alignedStart;
 
@@ -190,7 +238,6 @@ app.get('/file/:msgId', async (req, res) => {
 
         let buf = Buffer.from(chunk);
 
-        // Skip leading bytes caused by alignment
         if (skipped < skipBytes) {
           const toSkip = Math.min(skipBytes - skipped, buf.length);
           skipped += toSkip;
@@ -206,7 +253,6 @@ app.get('/file/:msgId', async (req, res) => {
       }
 
     } else {
-      // ── Full file stream ──
       res.setHeader('Content-Length', String(fileSize));
 
       for await (const chunk of client.iterDownload({

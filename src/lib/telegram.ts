@@ -32,13 +32,18 @@ function xhrUpload(
     for (const [k, v] of Object.entries(headers)) {
       xhr.setRequestHeader(k, v);
     }
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
-    };
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          // Cap at 90% — the remaining 10% represents the server-side Telegram upload.
+          // onProgress(100) is called only after the server responds successfully.
+          onProgress(Math.min(90, Math.round((e.loaded / e.total) * 90)));
+        }
+      };
+    }
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
+        if (onProgress) onProgress(100);
         try {
           resolve(JSON.parse(xhr.responseText));
         } catch {
@@ -80,16 +85,52 @@ async function uploadViaMTProto(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<{ url: string; fileName: string }> {
+  // Generate a unique ID so the SSE endpoint and upload endpoint share state
+  const uploadId = Math.random().toString(36).slice(2) + Date.now().toString(36);
   const formData = new FormData();
   formData.append('file', file);
 
-  const data = await xhrUpload(
-    `${MTPROTO_SERVER_URL}/upload`,
-    formData,
-    {},
-    onProgress,
-  );
+  // ── Phase 1: browser → Render (XHR, 0–30%) ──────────────────
+  // ── Phase 2: Render → Telegram (SSE, 30–100%) ───────────────
+  //
+  // Open the SSE stream first so it's ready before Render starts
+  // the Telegram upload (which begins only after Phase 1 finishes).
 
-  if (data.error) throw new Error(data.error);
-  return { url: data.url, fileName: data.fileName ?? file.name };
+  let eventSource: EventSource | null = null;
+
+  if (onProgress) {
+    eventSource = new EventSource(`${MTPROTO_SERVER_URL}/progress/${uploadId}`);
+
+    eventSource.onmessage = (e) => {
+      const tgPct = parseInt(e.data, 10);
+      if (!isNaN(tgPct)) {
+        // Map Telegram's 0–100 into the 30–99 range on the UI bar
+        onProgress(30 + Math.round(tgPct * 0.69));
+      }
+    };
+
+    eventSource.addEventListener('done', () => {
+      onProgress(100);
+      eventSource?.close();
+      eventSource = null;
+    });
+  }
+
+  try {
+    // XHR progress maps to 0–30% (browser → Render).
+    // SSE takes over at 30% once the file reaches Render.
+    const data = await xhrUpload(
+      `${MTPROTO_SERVER_URL}/upload?uploadId=${uploadId}`,
+      formData,
+      {},
+      onProgress
+        ? (pct) => onProgress(Math.round(pct * 0.30)) // 0–90% XHR → 0–27% UI
+        : undefined,
+    );
+
+    if (data.error) throw new Error(data.error);
+    return { url: data.url, fileName: data.fileName ?? file.name };
+  } finally {
+    eventSource?.close();
+  }
 }
