@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadToCloudinary } from '@/lib/cloudinary';
+import { uploadToTelegram } from '@/lib/telegram';
 import { useToast } from './use-toast';
 
 export type NoteType = 'text' | 'image' | 'pdf' | 'video' | 'audio' | 'link' | 'file';
@@ -191,7 +191,7 @@ export function usePublicNotes() {
 
   const uploadFile = useCallback(async (file: File): Promise<string | null> => {
     try {
-      const result = await uploadToCloudinary(file);
+      const result = await uploadToTelegram(file);
       if (!result) throw new Error('Upload returned no result');
       return result.url;
     } catch (error: any) {
