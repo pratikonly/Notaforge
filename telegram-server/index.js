@@ -93,9 +93,10 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     const peer = await ensureConnected();
 
     // Upload file bytes to Telegram servers
+    // workers: 16 uploads 16 chunks in parallel — ~4x faster than the old workers: 4
     const tgFile = await client.uploadFile({
       file: new CustomFile(originalname, size, tempPath),
-      workers: 4,
+      workers: 16,
       onProgress: (pct) => process.stdout.write(`\rUpload ${(pct * 100).toFixed(0)}%  `),
     });
     console.log(`\nUpload complete, sending to channel...`);
@@ -121,7 +122,8 @@ app.post('/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// Serve endpoint — streams file from Telegram channel
+// Serve endpoint — streams file from Telegram with Range request support.
+// Range requests are required by browsers for video/audio seeking and PDF preview.
 app.get('/file/:msgId', async (req, res) => {
   try {
     const msgId    = parseInt(req.params.msgId);
@@ -139,15 +141,9 @@ app.get('/file/:msgId', async (req, res) => {
 
     if (!doc) return res.status(404).json({ error: 'No document in message' });
 
-    const mimeType = doc.mimeType  || 'application/octet-stream';
-    const fileSize = doc.size?.toString();
+    const mimeType = doc.mimeType || 'application/octet-stream';
+    const fileSize = Number(doc.size);
 
-    res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(String(fileName))}"`);
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    if (fileSize) res.setHeader('Content-Length', fileSize);
-
-    // Stream in 512 KB chunks — keeps memory low even for 2 GB files
     const fileLocation = new Api.InputDocumentFileLocation({
       id:            doc.id,
       accessHash:    doc.accessHash,
@@ -155,15 +151,73 @@ app.get('/file/:msgId', async (req, res) => {
       thumbSize:     '',
     });
 
-    for await (const chunk of client.iterDownload({
-      file:        fileLocation,
-      requestSize: 512 * 1024,
-    })) {
-      const canContinue = res.write(Buffer.from(chunk));
-      if (!canContinue) {
-        await new Promise(resolve => res.once('drain', resolve));
+    const CHUNK = 512 * 1024; // 512 KB — chunk size for streaming
+    // Telegram MTProto requires offsets aligned to 4096 bytes
+    const ALIGN = 4096;
+
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(String(fileName))}"`);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Accept-Ranges', 'bytes');
+
+    const rangeHeader = req.headers.range;
+
+    if (rangeHeader) {
+      // ── Partial content (browser seek / video metadata fetch) ──
+      const [startStr, endStr] = rangeHeader.replace(/bytes=/, '').split('-');
+      const start  = parseInt(startStr, 10) || 0;
+      const end    = endStr ? Math.min(parseInt(endStr, 10), fileSize - 1) : fileSize - 1;
+      const length = end - start + 1;
+
+      // Align the download start down to the nearest ALIGN boundary
+      const alignedStart = Math.floor(start / ALIGN) * ALIGN;
+      const skipBytes    = start - alignedStart;
+
+      res.status(206);
+      res.setHeader('Content-Range',  `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Content-Length', String(length));
+
+      let sent    = 0;
+      let skipped = 0;
+
+      for await (const chunk of client.iterDownload({
+        file:        fileLocation,
+        requestSize: CHUNK,
+        offset:      BigInt(alignedStart),
+        limit:       skipBytes + length,
+      })) {
+        if (sent >= length) break;
+
+        let buf = Buffer.from(chunk);
+
+        // Skip leading bytes caused by alignment
+        if (skipped < skipBytes) {
+          const toSkip = Math.min(skipBytes - skipped, buf.length);
+          skipped += toSkip;
+          buf = buf.slice(toSkip);
+        }
+
+        if (buf.length === 0) continue;
+
+        const toSend = Math.min(buf.length, length - sent);
+        const canContinue = res.write(buf.slice(0, toSend));
+        sent += toSend;
+        if (!canContinue) await new Promise(resolve => res.once('drain', resolve));
+      }
+
+    } else {
+      // ── Full file stream ──
+      res.setHeader('Content-Length', String(fileSize));
+
+      for await (const chunk of client.iterDownload({
+        file:        fileLocation,
+        requestSize: CHUNK,
+      })) {
+        const canContinue = res.write(Buffer.from(chunk));
+        if (!canContinue) await new Promise(resolve => res.once('drain', resolve));
       }
     }
+
     res.end();
 
   } catch (err) {
