@@ -74,10 +74,8 @@ const CATS_META = [
 ] as const;
 
 function StoragePopup({ data, onClose, alignRight }: { data: StorageData; onClose: () => void; alignRight: boolean }) {
-  const { cats, totalMB, limitMB, pct } = data;
+  const { cats, totalMB } = data;
   const totalNotes = Object.values(cats).reduce((s, c) => s + c.count, 0);
-  const barColor = pct < 50 ? ['#34d399','#10b981'] : pct < 75 ? ['#fbbf24','#f59e0b'] : pct < 90 ? ['#f97316','#ea580c'] : ['#f87171','#ef4444'];
-  const barGlow  = pct < 50 ? 'rgba(52,211,153,0.5)' : pct < 75 ? 'rgba(251,191,36,0.5)' : pct < 90 ? 'rgba(249,115,22,0.5)' : 'rgba(248,113,113,0.5)';
 
   return (
     <>
@@ -113,25 +111,25 @@ function StoragePopup({ data, onClose, alignRight }: { data: StorageData; onClos
               <span className="text-[13px] font-semibold tracking-tight" style={{ color: 'rgba(255,255,255,0.88)' }}>Storage</span>
             </div>
             <div className="text-right">
-              <div className="text-[12px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>{fmtSize(totalMB)}</div>
-              <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>of {fmtSize(limitMB)}</div>
+              <div className="text-[12px] font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>~{fmtSize(totalMB)}</div>
+              <div className="text-[9px]" style={{ color: 'rgba(52,211,153,0.8)' }}>Unlimited</div>
             </div>
           </div>
 
-          {/* Main bar */}
-          <div className="relative h-2.5 w-full rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-            <div style={{
-              height: '100%', width: `${pct}%`,
-              background: `linear-gradient(90deg, ${barColor[0]}, ${barColor[1]})`,
-              boxShadow: `0 0 12px ${barGlow}`,
-              borderRadius: '9999px',
-              animation: 'bGrow 0.9s cubic-bezier(0.22,1,0.36,1)',
-              minWidth: pct > 0 ? '4px' : '0',
-            }} />
+          {/* Relative distribution bar */}
+          <div className="relative h-2.5 w-full rounded-full overflow-hidden flex gap-px" style={{ background: 'rgba(255,255,255,0.08)' }}>
+            {totalMB > 0 && (['photos','videos','docs','audio'] as const).map((k, i) => {
+              const colors = ['#a78bfa','#f472b6','#60a5fa','#34d399'];
+              const mb  = (cats as any)[k]?.mb ?? 0;
+              const w   = mb > 0 ? Math.max((mb / totalMB) * 100, 2) : 0;
+              return w > 0 ? (
+                <div key={k} style={{ height: '100%', width: `${w}%`, background: colors[i], borderRadius: '9999px', animation: 'bGrow 0.9s cubic-bezier(0.22,1,0.36,1)' }} />
+              ) : null;
+            })}
           </div>
           <div className="flex items-center justify-between mt-1.5">
-            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.28)' }}>{fmtSize(limitMB - totalMB)} free</span>
-            <span className="text-[11px] font-bold" style={{ color: barColor[0] }}>{pct.toFixed(1)}%</span>
+            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.28)' }}>Estimates · actual may vary</span>
+            <span className="text-[10px]" style={{ color: 'rgba(52,211,153,0.8)' }}>∞ Free</span>
           </div>
         </div>
 
@@ -185,7 +183,7 @@ function StoragePopup({ data, onClose, alignRight }: { data: StorageData; onClos
         {/* Footer */}
         <div className="px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <p className="text-[9px] text-center" style={{ color: 'rgba(255,255,255,0.22)' }}>
-            {totalNotes} note{totalNotes !== 1 ? 's' : ''} total · Cloudinary storage
+            {totalNotes} note{totalNotes !== 1 ? 's' : ''} total · Telegram storage · Unlimited
           </p>
         </div>
       </div>
@@ -263,77 +261,24 @@ export function NotaForgeDashboard() {
     return () => window.removeEventListener('keydown', h);
   }, [storageOpen]);
 
-  // Cloudinary real usage stats
-  const [cloudinaryUsage, setCloudinaryUsage] = useState<{
-    storage: { used_bytes: number; limit_bytes: number };
-    resources: { images: number; videos: number; raw: number };
-    bytes_by_type?: { images: number; videos: number; raw: number };
-    plan: string;
-  } | null>(null);
-
-  // Bug fix: only fetch Cloudinary usage when admin — don't leak stats to public visitors
-  useEffect(() => {
-    if (!isAdmin) return;
-    supabase.functions.invoke('cloudinary-usage').then(({ data, error }) => {
-      if (!error && data) setCloudinaryUsage(data);
-    });
-  }, [isAdmin]);
-
-  // Storage stats — real Cloudinary data + local note counts
+  // Storage stats — estimated from note counts (Telegram storage is unlimited)
   const storageData = useMemo((): StorageData => {
     const cats = {
       photos: { count: 0, mb: 0 }, docs:  { count: 0, mb: 0 },
       videos: { count: 0, mb: 0 }, audio: { count: 0, mb: 0 },
       links:  { count: 0, mb: 0 }, text:  { count: 0, mb: 0 },
     };
-
-    // Count notes by type from DB
     notes.forEach(n => {
-      if      (n.note_type === 'image')                         { cats.photos.count++; }
-      else if (n.note_type === 'video')                         { cats.videos.count++; }
-      else if (n.note_type === 'audio')                         { cats.audio.count++;  }
-      else if (n.note_type === 'file' || n.note_type === 'pdf') { cats.docs.count++;   }
-      else if (n.note_type === 'link')                          { cats.links.count++;  }
-      else                                                       { cats.text.count++;   }
-    });
-
-    if (cloudinaryUsage) {
-      const usedMB = cloudinaryUsage.storage.used_bytes / (1024 * 1024);
-      const limitMB = cloudinaryUsage.storage.limit_bytes / (1024 * 1024);
-      const bbt = cloudinaryUsage.bytes_by_type;
-      if (bbt) {
-        // Exact per-type sizes from Cloudinary search
-        cats.photos.mb = bbt.images / (1024 * 1024);
-        cats.videos.mb = bbt.videos / (1024 * 1024);
-        cats.docs.mb   = bbt.raw    / (1024 * 1024);
-      } else {
-        // Fallback: proportional by resource counts
-        const totalFiles = (cloudinaryUsage.resources.images || 0) + (cloudinaryUsage.resources.videos || 0) + (cloudinaryUsage.resources.raw || 0);
-        const imgRatio = totalFiles > 0 ? (cloudinaryUsage.resources.images / totalFiles) : 0;
-        const vidRatio = totalFiles > 0 ? (cloudinaryUsage.resources.videos / totalFiles) : 0;
-        const rawRatio = totalFiles > 0 ? (cloudinaryUsage.resources.raw / totalFiles) : 0;
-        cats.photos.mb = usedMB * imgRatio;
-        cats.videos.mb = usedMB * vidRatio;
-        cats.docs.mb   = usedMB * rawRatio;
-      }
-      cats.links.mb  = 0;
-      cats.text.mb   = 0;
-      return { cats, totalMB: usedMB, limitMB, pct: limitMB > 0 ? Math.min((usedMB / limitMB) * 100, 100) : 0 };
-    }
-
-    // Fallback: estimates
-    notes.forEach(n => {
-      if      (n.note_type === 'image')                         { cats.photos.mb += 1.2; }
-      else if (n.note_type === 'video')                         { cats.videos.mb += 8.0; }
-      else if (n.note_type === 'audio')                         { cats.audio.mb  += 3.5; }
-      else if (n.note_type === 'file' || n.note_type === 'pdf') { cats.docs.mb   += 1.8; }
-      else if (n.note_type === 'link')                          { cats.links.mb  += 0.001; }
-      else                                                       { cats.text.mb   += 0.01; }
+      if      (n.note_type === 'image')                         { cats.photos.count++; cats.photos.mb += 1.2; }
+      else if (n.note_type === 'video')                         { cats.videos.count++; cats.videos.mb += 8.0; }
+      else if (n.note_type === 'audio')                         { cats.audio.count++;  cats.audio.mb  += 3.5; }
+      else if (n.note_type === 'file' || n.note_type === 'pdf') { cats.docs.count++;   cats.docs.mb   += 1.8; }
+      else if (n.note_type === 'link')                          { cats.links.count++;  cats.links.mb  += 0.001; }
+      else                                                       { cats.text.count++;   cats.text.mb   += 0.01; }
     });
     const totalMB = Object.values(cats).reduce((s, c) => s + c.mb, 0);
-    const limitMB = 25 * 1024; // 25 GB Cloudinary free
-    return { cats, totalMB, limitMB, pct: totalMB > 0 ? Math.min((totalMB / limitMB) * 100, 100) : 0 };
-  }, [notes, cloudinaryUsage]);
+    return { cats, totalMB, limitMB: 0, pct: 0 }; // limitMB 0 = unlimited
+  }, [notes]);
 
   const resetForm = () => {
     setTitle(''); setContent(''); setNoteType('text');
@@ -357,10 +302,9 @@ export function NotaForgeDashboard() {
     // Bug fix: use forcedType when provided (from button click context).
     // For drag-drop/paste, detect from first file MIME type.
     const firstType: NoteType = forcedType ?? detectType(filesToUpload[0]);
-    const isImage = firstType === 'image';
-    const maxSize = isImage ? 10 * 1024 * 1024 : 100 * 1024 * 1024;
+    const maxSize = 50 * 1024 * 1024; // 50 MB — Telegram Bot API limit
     for (const file of filesToUpload) {
-      if (file.size > maxSize) { alert(`"${file.name}" exceeds ${isImage ? '10MB' : '100MB'}`); return; }
+      if (file.size > maxSize) { alert(`"${file.name}" exceeds 50 MB (Telegram limit)`); return; }
     }
     setIsUploading(true); setUploadSuccess(false);
     const urls: string[] = [], names: string[] = [];

@@ -164,7 +164,7 @@ export function NoteFormPanel({
       {/* Upload Limits & Success */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs text-muted-foreground">
-          Max 5 files | Images 10MB | Others 100MB | Any type supported
+          Max 5 files · 50 MB per file · Any type supported
         </p>
         {uploadSuccess && (
           <span className="text-xs text-green-500 flex items-center gap-1">

@@ -4,7 +4,8 @@
 Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
-    const fileId = url.searchParams.get('id');
+    const fileId   = url.searchParams.get('id');
+    const fileName = url.searchParams.get('name') ?? '';
 
     if (!fileId) {
       return new Response('Missing id parameter', { status: 400 });
@@ -38,9 +39,16 @@ Deno.serve(async (req) => {
 
     const contentType = fileRes.headers.get('Content-Type') ?? 'application/octet-stream';
 
+    // Determine safe display name for Content-Disposition
+    const safeName = fileName
+      ? encodeURIComponent(fileName).replace(/['()]/g, escape)
+      : filePath.split('/').pop() ?? 'file';
+
     return new Response(fileRes.body, {
       headers: {
         'Content-Type': contentType,
+        // inline = open in browser (not force-download); filename shown in browser tab / save dialog
+        'Content-Disposition': `inline; filename="${safeName}"`,
         // Cache aggressively — file_ids are permanent in Telegram
         'Cache-Control': 'public, max-age=31536000, immutable',
       },

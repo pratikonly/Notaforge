@@ -7,8 +7,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
-    const CHAT_ID   = Deno.env.get('TELEGRAM_CHAT_ID');
+    const BOT_TOKEN   = Deno.env.get('TELEGRAM_BOT_TOKEN');
+    const CHAT_ID     = Deno.env.get('TELEGRAM_CHAT_ID');
     const PROJECT_URL = Deno.env.get('SUPABASE_URL');
 
     if (!BOT_TOKEN || !CHAT_ID) {
@@ -43,11 +43,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const fileId: string = tgData.result.document.file_id;
+    const fileId: string   = tgData.result.document.file_id;
     const fileName: string = tgData.result.document.file_name ?? file.name;
 
-    // Serve URL points to our telegram-serve edge function (keeps token secret)
-    const serveUrl = `${PROJECT_URL}/functions/v1/telegram-serve?id=${fileId}`;
+    // Include the original filename in the serve URL so telegram-serve can set Content-Disposition
+    const encodedName = encodeURIComponent(fileName);
+    const serveUrl = `${PROJECT_URL}/functions/v1/telegram-serve?id=${fileId}&name=${encodedName}`;
 
     return new Response(JSON.stringify({ url: serveUrl, fileId, fileName }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
