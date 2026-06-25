@@ -24,7 +24,7 @@ export type Database = {
           name: string
           parent_id: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           color?: string | null
@@ -35,7 +35,7 @@ export type Database = {
           name?: string
           parent_id?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           color?: string | null
@@ -46,7 +46,7 @@ export type Database = {
           name?: string
           parent_id?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

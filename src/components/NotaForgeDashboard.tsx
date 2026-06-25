@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePublicNotes, Note, NoteType } from '@/hooks/usePublicNotes';
+import { useFolders } from '@/hooks/useFolders';
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_LABEL } from '@/lib/telegram';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +13,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { 
-  FileText, 
-  Trash2, 
+import {
+  FileText,
+  Trash2,
   Loader2,
   ExternalLink,
   Download,
@@ -31,6 +32,9 @@ import {
   Type,
   Copy,
   Check as CheckIcon,
+  Home as HomeIcon,
+  Folder as FolderIcon,
+  FolderPlus,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -235,10 +239,21 @@ function CopyButton({ text }: { text: string }) {
 
 export function NotaForgeDashboard() {
   const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
+  const { folders, createFolder, deleteFolder } = useFolders();
   const isMobile = useIsMobile();
   const { isAdmin, login, logout, loading: authLoading } = useAdminAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [storageOpen, setStorageOpen]       = useState(false);
+
+  // Folder navigation: null = Home (all notes)
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [formFolderId, setFormFolderId]         = useState<string | null>(null);
+  const [newFolderOpen, setNewFolderOpen]       = useState(false);
+  const [newFolderName, setNewFolderName]       = useState('');
+  const [folderToDelete, setFolderToDelete]     = useState<{ id: string; name: string } | null>(null);
+
+  // Keep the form's default folder in sync with the active sidebar folder
+  useEffect(() => { setFormFolderId(selectedFolderId); }, [selectedFolderId]);
 
   // Form state
   const [title, setTitle]               = useState('');
@@ -257,6 +272,7 @@ export function NotaForgeDashboard() {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isDragging, setIsDragging]     = useState(false);
   const [mobileFormOpen, setMobileFormOpen] = useState(false);
+
 
   // Close storage popup on Escape
   useEffect(() => {
@@ -415,12 +431,14 @@ export function NotaForgeDashboard() {
   const handleSubmit = async () => {
     if (!title.trim() && !content.trim() && fileUrls.length === 0 && !linkUrl.trim()) return;
     setIsSubmitting(true);
+    const folder_id = formFolderId ?? null;
     if (noteType === 'image' && fileUrls.length > 0) {
       for (let i = 0; i < fileUrls.length; i++) {
         await createNote({
           title: fileUrls.length > 1 ? `${title.trim() || 'Untitled'} (${i + 1})` : (title.trim() || 'Untitled'),
           content: content.trim() || null, note_type: noteType,
           file_url: fileUrls[i], file_name: fileNames[i], link_url: null,
+          folder_id,
         });
       }
     } else {
@@ -428,6 +446,7 @@ export function NotaForgeDashboard() {
         title: title.trim() || 'Untitled', content: content.trim() || null,
         note_type: noteType, file_url: fileUrls[0] || null,
         file_name: fileNames[0] || null, link_url: linkUrl.trim() || null,
+        folder_id,
       });
     }
     resetForm(); setIsSubmitting(false); setMobileFormOpen(false);
@@ -561,6 +580,35 @@ export function NotaForgeDashboard() {
     linkUrl, setLinkUrl, fileUrls, fileNames, isSubmitting, isUploading,
     uploadSuccess, uploadProgress, timeRemaining, isDragging, handleDragOver, handleDragLeave,
     handleDrop, handleFileUpload, handleSubmit, clearAttachment, removeImage,
+    folders, formFolderId, setFormFolderId,
+  };
+
+  // Notes shown in the grid — filtered by the active folder.
+  // Home (null) shows EVERY active note; a folder shows only its own.
+  const visibleNotes = useMemo(() => {
+    if (selectedFolderId === null) return notes;
+    return notes.filter(n => n.folder_id === selectedFolderId);
+  }, [notes, selectedFolderId]);
+
+  const activeFolderName = selectedFolderId
+    ? (folders.find(f => f.id === selectedFolderId)?.name ?? 'Folder')
+    : 'Home';
+
+  const submitNewFolder = async () => {
+    const name = newFolderName.trim();
+    if (!name) return;
+    const created = await createFolder(name);
+    setNewFolderName('');
+    setNewFolderOpen(false);
+    if (created) setSelectedFolderId(created.id);
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (!folderToDelete) return;
+    const id = folderToDelete.id;
+    setFolderToDelete(null);
+    if (selectedFolderId === id) setSelectedFolderId(null);
+    await deleteFolder(id);
   };
 
   return (
@@ -717,26 +765,75 @@ export function NotaForgeDashboard() {
       {/* ══ Body ══ */}
       <div className="flex flex-1 overflow-y-auto overflow-x-hidden p-2 pt-2 gap-4 relative">
 
-        {/* Desktop sidebar */}
+        {/* Desktop LEFT sidebar — note form */}
         <aside className="hidden lg:flex w-72 shrink-0 flex-col ml-4 fixed top-[88px] left-0 z-40">
           <NoteFormPanel {...sharedFormProps} />
         </aside>
 
         {/* Main grid */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px]">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px] lg:mr-[240px]">
           <h1 className="sr-only">NotaForge — Simple Note Sharing and Storage</h1>
+
+          {/* Mobile folder chip bar */}
+          <div className="lg:hidden mb-3 -mx-1 px-1 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-1.5 min-w-max pb-1">
+              <button
+                onClick={() => setSelectedFolderId(null)}
+                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0"
+                style={{
+                  background: selectedFolderId === null ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${selectedFolderId === null ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                  color: selectedFolderId === null ? '#fff' : 'rgba(255,255,255,0.55)',
+                }}
+              >
+                <HomeIcon size={12} /> Home
+              </button>
+              {folders.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setSelectedFolderId(f.id)}
+                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0"
+                  style={{
+                    background: selectedFolderId === f.id ? 'rgba(255,200,60,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${selectedFolderId === f.id ? 'rgba(255,200,60,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    color: selectedFolderId === f.id ? '#ffd966' : 'rgba(255,255,255,0.55)',
+                  }}
+                >
+                  <FolderIcon size={12} /> {f.name}
+                </button>
+              ))}
+              {isAdmin && (
+                <button
+                  onClick={() => setNewFolderOpen(true)}
+                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium shrink-0"
+                  style={{
+                    background: 'rgba(139,92,246,0.1)',
+                    border: '1px dashed rgba(139,92,246,0.4)',
+                    color: 'rgba(196,167,255,0.9)',
+                  }}
+                >
+                  <FolderPlus size={12} /> New
+                </button>
+              )}
+            </div>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin" size={32} />
             </div>
-          ) : notes.length === 0 ? (
+          ) : visibleNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <FileText size={48} className="mb-4" />
-              <p className="text-center px-4">No notes yet. Add your first note!</p>
+              <p className="text-center px-4">
+                {selectedFolderId === null
+                  ? 'No notes yet. Add your first note!'
+                  : `No notes in "${activeFolderName}" yet.`}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 w-full">
-              {notes.map((note) => {
+              {visibleNotes.map((note) => {
                 const ac = noteAccent(note.note_type);
                 return (
                   <div
@@ -821,7 +918,92 @@ export function NotaForgeDashboard() {
             </div>
           )}
         </main>
+
+        {/* Desktop RIGHT sidebar — folders */}
+        <aside
+          className="hidden lg:flex w-[220px] shrink-0 flex-col fixed top-[88px] right-4 z-40 rounded-2xl p-3 gap-1"
+          style={{
+            maxHeight: 'calc(100vh - 110px)',
+            background: 'rgba(10,10,16,0.55)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(18px)',
+          }}
+        >
+          <div className="flex items-center justify-between px-2 pb-2 mb-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <span className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              Folders
+            </span>
+            {isAdmin && (
+              <button
+                onClick={() => setNewFolderOpen(true)}
+                className="p-1 rounded-md hover:bg-white/10 transition-colors"
+                title="New folder"
+                aria-label="Create new folder"
+              >
+                <FolderPlus size={14} style={{ color: 'rgba(196,167,255,0.9)' }} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto flex flex-col gap-0.5">
+            {/* Home — always on top, default */}
+            <button
+              onClick={() => setSelectedFolderId(null)}
+              className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors"
+              style={{
+                background: selectedFolderId === null ? 'rgba(255,255,255,0.1)' : 'transparent',
+                color: selectedFolderId === null ? '#fff' : 'rgba(255,255,255,0.6)',
+              }}
+              onMouseEnter={e => { if (selectedFolderId !== null) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+              onMouseLeave={e => { if (selectedFolderId !== null) e.currentTarget.style.background = 'transparent'; }}
+            >
+              <HomeIcon size={14} />
+              <span className="text-[13px] font-medium flex-1 truncate">Home</span>
+              <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{notes.length}</span>
+            </button>
+
+            {folders.map(f => {
+              const count = notes.filter(n => n.folder_id === f.id).length;
+              const active = selectedFolderId === f.id;
+              return (
+                <div key={f.id} className="group relative flex items-stretch">
+                  <button
+                    onClick={() => setSelectedFolderId(f.id)}
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors flex-1 min-w-0"
+                    style={{
+                      background: active ? 'rgba(255,200,60,0.12)' : 'transparent',
+                      color: active ? '#ffd966' : 'rgba(255,255,255,0.6)',
+                    }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <FolderIcon size={14} />
+                    <span className="text-[13px] font-medium flex-1 truncate">{f.name}</span>
+                    <span className="text-[10px]" style={{ color: active ? 'rgba(255,217,102,0.7)' : 'rgba(255,255,255,0.35)' }}>{count}</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setFolderToDelete({ id: f.id, name: f.name })}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-red-500/20"
+                      aria-label={`Delete folder ${f.name}`}
+                      title="Delete folder"
+                    >
+                      <Trash2 size={11} style={{ color: 'rgba(248,113,113,0.7)' }} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+
+            {folders.length === 0 && (
+              <p className="text-[10px] text-center px-2 py-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                {isAdmin ? 'No folders yet — click + to create one' : 'No folders yet'}
+              </p>
+            )}
+          </div>
+        </aside>
       </div>
+
 
       {/* Mobile FAB */}
       <button
@@ -878,6 +1060,54 @@ export function NotaForgeDashboard() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteNote}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* New Folder dialog — admin only */}
+      <AlertDialog open={newFolderOpen} onOpenChange={(o) => { if (!o) { setNewFolderOpen(false); setNewFolderName(''); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create new folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Give your folder a name. Everyone will see it, but only admins can edit or delete folders.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            autoFocus
+            placeholder="Folder name"
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitNewFolder(); } }}
+            className="bg-secondary border-border text-white"
+            maxLength={60}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={submitNewFolder} disabled={!newFolderName.trim()}>
+              Create
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete folder confirmation */}
+      <AlertDialog open={!!folderToDelete} onOpenChange={(o) => !o && setFolderToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this folder?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{folderToDelete?.name}" will be permanently deleted. Notes inside will move back to Home.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteFolder}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

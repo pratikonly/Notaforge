@@ -134,6 +134,7 @@ export function usePublicNotes() {
           file_name: noteData.file_name,
           link_url: noteData.link_url,
           color: noteData.color || 'default',
+          folder_id: noteData.folder_id ?? null,
         })
         .select()
         .single();
