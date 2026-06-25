@@ -239,10 +239,21 @@ function CopyButton({ text }: { text: string }) {
 
 export function NotaForgeDashboard() {
   const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
+  const { folders, createFolder, deleteFolder } = useFolders();
   const isMobile = useIsMobile();
   const { isAdmin, login, logout, loading: authLoading } = useAdminAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [storageOpen, setStorageOpen]       = useState(false);
+
+  // Folder navigation: null = Home (all notes)
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [formFolderId, setFormFolderId]         = useState<string | null>(null);
+  const [newFolderOpen, setNewFolderOpen]       = useState(false);
+  const [newFolderName, setNewFolderName]       = useState('');
+  const [folderToDelete, setFolderToDelete]     = useState<{ id: string; name: string } | null>(null);
+
+  // Keep the form's default folder in sync with the active sidebar folder
+  useEffect(() => { setFormFolderId(selectedFolderId); }, [selectedFolderId]);
 
   // Form state
   const [title, setTitle]               = useState('');
@@ -261,6 +272,7 @@ export function NotaForgeDashboard() {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isDragging, setIsDragging]     = useState(false);
   const [mobileFormOpen, setMobileFormOpen] = useState(false);
+
 
   // Close storage popup on Escape
   useEffect(() => {
