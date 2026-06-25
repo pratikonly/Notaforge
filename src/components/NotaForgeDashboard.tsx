@@ -431,12 +431,14 @@ export function NotaForgeDashboard() {
   const handleSubmit = async () => {
     if (!title.trim() && !content.trim() && fileUrls.length === 0 && !linkUrl.trim()) return;
     setIsSubmitting(true);
+    const folder_id = formFolderId ?? null;
     if (noteType === 'image' && fileUrls.length > 0) {
       for (let i = 0; i < fileUrls.length; i++) {
         await createNote({
           title: fileUrls.length > 1 ? `${title.trim() || 'Untitled'} (${i + 1})` : (title.trim() || 'Untitled'),
           content: content.trim() || null, note_type: noteType,
           file_url: fileUrls[i], file_name: fileNames[i], link_url: null,
+          folder_id,
         });
       }
     } else {
@@ -444,6 +446,7 @@ export function NotaForgeDashboard() {
         title: title.trim() || 'Untitled', content: content.trim() || null,
         note_type: noteType, file_url: fileUrls[0] || null,
         file_name: fileNames[0] || null, link_url: linkUrl.trim() || null,
+        folder_id,
       });
     }
     resetForm(); setIsSubmitting(false); setMobileFormOpen(false);
