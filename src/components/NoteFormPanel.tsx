@@ -111,8 +111,24 @@ export function NoteFormPanel({
         onChange={(e) => setTitle(e.target.value)}
         className="mb-3 bg-secondary border-border text-white placeholder:text-muted-foreground"
       />
-      
-      {/* Content Textarea */}
+
+      {/* Folder Selector */}
+      <div className="mb-3">
+        <label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">
+          Folder
+        </label>
+        <select
+          value={formFolderId ?? ''}
+          onChange={(e) => setFormFolderId(e.target.value || null)}
+          className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/30"
+        >
+          <option value="">🏠 Home (no folder)</option>
+          {folders.map(f => (
+            <option key={f.id} value={f.id}>📁 {f.name}</option>
+          ))}
+        </select>
+      </div>
+
       <Textarea
         placeholder="Your note (optional)..."
         value={content}
