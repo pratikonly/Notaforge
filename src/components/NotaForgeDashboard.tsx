@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePublicNotes, Note, NoteType } from '@/hooks/usePublicNotes';
+import { useFolders } from '@/hooks/useFolders';
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_LABEL } from '@/lib/telegram';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +13,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { 
-  FileText, 
-  Trash2, 
+import {
+  FileText,
+  Trash2,
   Loader2,
   ExternalLink,
   Download,
@@ -31,6 +32,9 @@ import {
   Type,
   Copy,
   Check as CheckIcon,
+  Home as HomeIcon,
+  Folder as FolderIcon,
+  FolderPlus,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
