@@ -765,26 +765,75 @@ export function NotaForgeDashboard() {
       {/* ══ Body ══ */}
       <div className="flex flex-1 overflow-y-auto overflow-x-hidden p-2 pt-2 gap-4 relative">
 
-        {/* Desktop sidebar */}
+        {/* Desktop LEFT sidebar — note form */}
         <aside className="hidden lg:flex w-72 shrink-0 flex-col ml-4 fixed top-[88px] left-0 z-40">
           <NoteFormPanel {...sharedFormProps} />
         </aside>
 
         {/* Main grid */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px]">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px] lg:mr-[240px]">
           <h1 className="sr-only">NotaForge — Simple Note Sharing and Storage</h1>
+
+          {/* Mobile folder chip bar */}
+          <div className="lg:hidden mb-3 -mx-1 px-1 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-1.5 min-w-max pb-1">
+              <button
+                onClick={() => setSelectedFolderId(null)}
+                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0"
+                style={{
+                  background: selectedFolderId === null ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${selectedFolderId === null ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                  color: selectedFolderId === null ? '#fff' : 'rgba(255,255,255,0.55)',
+                }}
+              >
+                <HomeIcon size={12} /> Home
+              </button>
+              {folders.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setSelectedFolderId(f.id)}
+                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0"
+                  style={{
+                    background: selectedFolderId === f.id ? 'rgba(255,200,60,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${selectedFolderId === f.id ? 'rgba(255,200,60,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    color: selectedFolderId === f.id ? '#ffd966' : 'rgba(255,255,255,0.55)',
+                  }}
+                >
+                  <FolderIcon size={12} /> {f.name}
+                </button>
+              ))}
+              {isAdmin && (
+                <button
+                  onClick={() => setNewFolderOpen(true)}
+                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium shrink-0"
+                  style={{
+                    background: 'rgba(139,92,246,0.1)',
+                    border: '1px dashed rgba(139,92,246,0.4)',
+                    color: 'rgba(196,167,255,0.9)',
+                  }}
+                >
+                  <FolderPlus size={12} /> New
+                </button>
+              )}
+            </div>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="animate-spin" size={32} />
             </div>
-          ) : notes.length === 0 ? (
+          ) : visibleNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <FileText size={48} className="mb-4" />
-              <p className="text-center px-4">No notes yet. Add your first note!</p>
+              <p className="text-center px-4">
+                {selectedFolderId === null
+                  ? 'No notes yet. Add your first note!'
+                  : `No notes in "${activeFolderName}" yet.`}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 w-full">
-              {notes.map((note) => {
+              {visibleNotes.map((note) => {
                 const ac = noteAccent(note.note_type);
                 return (
                   <div
