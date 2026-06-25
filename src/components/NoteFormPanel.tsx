@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { NoteType } from '@/hooks/usePublicNotes';
+import type { Folder } from '@/hooks/useFolders';
 
 interface NoteFormPanelProps {
   inSheet?: boolean;
@@ -43,6 +44,9 @@ interface NoteFormPanelProps {
   handleSubmit: () => void;
   clearAttachment: () => void;
   removeImage: (index: number) => void;
+  folders: Folder[];
+  formFolderId: string | null;
+  setFormFolderId: (id: string | null) => void;
 }
 
 export function NoteFormPanel({
@@ -70,6 +74,9 @@ export function NoteFormPanel({
   handleSubmit,
   clearAttachment,
   removeImage,
+  folders,
+  formFolderId,
+  setFormFolderId,
 }: NoteFormPanelProps) {
   // Bug fix: key changes whenever fileUrls.length changes so the input
   // element is remounted — this lets the same file be re-selected after removal.
