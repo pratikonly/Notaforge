@@ -918,7 +918,92 @@ export function NotaForgeDashboard() {
             </div>
           )}
         </main>
+
+        {/* Desktop RIGHT sidebar — folders */}
+        <aside
+          className="hidden lg:flex w-[220px] shrink-0 flex-col fixed top-[88px] right-4 z-40 rounded-2xl p-3 gap-1"
+          style={{
+            maxHeight: 'calc(100vh - 110px)',
+            background: 'rgba(10,10,16,0.55)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(18px)',
+          }}
+        >
+          <div className="flex items-center justify-between px-2 pb-2 mb-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <span className="text-[11px] uppercase tracking-wider font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              Folders
+            </span>
+            {isAdmin && (
+              <button
+                onClick={() => setNewFolderOpen(true)}
+                className="p-1 rounded-md hover:bg-white/10 transition-colors"
+                title="New folder"
+                aria-label="Create new folder"
+              >
+                <FolderPlus size={14} style={{ color: 'rgba(196,167,255,0.9)' }} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto flex flex-col gap-0.5">
+            {/* Home — always on top, default */}
+            <button
+              onClick={() => setSelectedFolderId(null)}
+              className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors"
+              style={{
+                background: selectedFolderId === null ? 'rgba(255,255,255,0.1)' : 'transparent',
+                color: selectedFolderId === null ? '#fff' : 'rgba(255,255,255,0.6)',
+              }}
+              onMouseEnter={e => { if (selectedFolderId !== null) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+              onMouseLeave={e => { if (selectedFolderId !== null) e.currentTarget.style.background = 'transparent'; }}
+            >
+              <HomeIcon size={14} />
+              <span className="text-[13px] font-medium flex-1 truncate">Home</span>
+              <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{notes.length}</span>
+            </button>
+
+            {folders.map(f => {
+              const count = notes.filter(n => n.folder_id === f.id).length;
+              const active = selectedFolderId === f.id;
+              return (
+                <div key={f.id} className="group relative flex items-stretch">
+                  <button
+                    onClick={() => setSelectedFolderId(f.id)}
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors flex-1 min-w-0"
+                    style={{
+                      background: active ? 'rgba(255,200,60,0.12)' : 'transparent',
+                      color: active ? '#ffd966' : 'rgba(255,255,255,0.6)',
+                    }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <FolderIcon size={14} />
+                    <span className="text-[13px] font-medium flex-1 truncate">{f.name}</span>
+                    <span className="text-[10px]" style={{ color: active ? 'rgba(255,217,102,0.7)' : 'rgba(255,255,255,0.35)' }}>{count}</span>
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setFolderToDelete({ id: f.id, name: f.name })}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-red-500/20"
+                      aria-label={`Delete folder ${f.name}`}
+                      title="Delete folder"
+                    >
+                      <Trash2 size={11} style={{ color: 'rgba(248,113,113,0.7)' }} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+
+            {folders.length === 0 && (
+              <p className="text-[10px] text-center px-2 py-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                {isAdmin ? 'No folders yet — click + to create one' : 'No folders yet'}
+              </p>
+            )}
+          </div>
+        </aside>
       </div>
+
 
       {/* Mobile FAB */}
       <button
