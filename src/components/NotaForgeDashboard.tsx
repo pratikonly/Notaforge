@@ -580,6 +580,35 @@ export function NotaForgeDashboard() {
     linkUrl, setLinkUrl, fileUrls, fileNames, isSubmitting, isUploading,
     uploadSuccess, uploadProgress, timeRemaining, isDragging, handleDragOver, handleDragLeave,
     handleDrop, handleFileUpload, handleSubmit, clearAttachment, removeImage,
+    folders, formFolderId, setFormFolderId,
+  };
+
+  // Notes shown in the grid — filtered by the active folder.
+  // Home (null) shows EVERY active note; a folder shows only its own.
+  const visibleNotes = useMemo(() => {
+    if (selectedFolderId === null) return notes;
+    return notes.filter(n => n.folder_id === selectedFolderId);
+  }, [notes, selectedFolderId]);
+
+  const activeFolderName = selectedFolderId
+    ? (folders.find(f => f.id === selectedFolderId)?.name ?? 'Folder')
+    : 'Home';
+
+  const submitNewFolder = async () => {
+    const name = newFolderName.trim();
+    if (!name) return;
+    const created = await createFolder(name);
+    setNewFolderName('');
+    setNewFolderOpen(false);
+    if (created) setSelectedFolderId(created.id);
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (!folderToDelete) return;
+    const id = folderToDelete.id;
+    setFolderToDelete(null);
+    if (selectedFolderId === id) setSelectedFolderId(null);
+    await deleteFolder(id);
   };
 
   return (
