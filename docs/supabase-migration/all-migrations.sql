@@ -33,6 +33,18 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   UNIQUE (user_id, role)
 );
 
+CREATE TABLE IF NOT EXISTS public.folders (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     uuid DEFAULT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  name        text DEFAULT 'Untitled Folder' NOT NULL,
+  color       text DEFAULT 'default',
+  parent_id   uuid DEFAULT NULL REFERENCES public.folders(id) ON DELETE CASCADE,
+  is_archived boolean DEFAULT false NOT NULL,
+  is_deleted  boolean DEFAULT false NOT NULL,
+  created_at  timestamptz DEFAULT now() NOT NULL,
+  updated_at  timestamptz DEFAULT now() NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS public.notes (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id     uuid DEFAULT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
