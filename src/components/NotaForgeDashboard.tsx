@@ -584,11 +584,13 @@ export function NotaForgeDashboard() {
   };
 
   // Notes shown in the grid — filtered by the active folder.
-  // Home (null) shows EVERY active note; a folder shows only its own.
+  // Home (null) shows only notes that aren't in any folder.
   const visibleNotes = useMemo(() => {
-    if (selectedFolderId === null) return notes;
+    if (selectedFolderId === null) return notes.filter(n => !n.folder_id);
     return notes.filter(n => n.folder_id === selectedFolderId);
   }, [notes, selectedFolderId]);
+
+  const homeCount = useMemo(() => notes.filter(n => !n.folder_id).length, [notes]);
 
   const activeFolderName = selectedFolderId
     ? (folders.find(f => f.id === selectedFolderId)?.name ?? 'Folder')
