@@ -7,10 +7,10 @@
 --   notes          → main content (CRUD + realtime)
 --   user_roles     → admin auth via has_role() RPC
 --   keep_alive_logs→ admin keep-alive monitoring page
+--   folders        → admin-managed folders that group notes
 -- Tables removed (zero usage in frontend):
 --   profiles       → was only trigger-created, never queried
 --   login_history  → completely unused
---   folders        → folder_id column on notes is always null
 -- ============================================================
 
 -- ── EXTENSIONS ───────────────────────────────────────────────
