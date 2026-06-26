@@ -146,10 +146,16 @@ CREATE TRIGGER notes_discord_logger
   AFTER INSERT ON public.notes
   FOR EACH ROW EXECUTE FUNCTION public.notify_discord_logger();
 
+DROP TRIGGER IF EXISTS update_folders_updated_at ON public.folders;
+CREATE TRIGGER update_folders_updated_at
+  BEFORE UPDATE ON public.folders
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
 -- ── ROW LEVEL SECURITY ───────────────────────────────────────
 ALTER TABLE public.user_roles      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notes           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.keep_alive_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.folders         ENABLE ROW LEVEL SECURITY;
 
 -- user_roles
 DROP POLICY IF EXISTS "Users can view their own roles" ON public.user_roles;
