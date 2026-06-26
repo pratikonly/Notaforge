@@ -122,7 +122,7 @@ export function NoteFormPanel({
           onChange={(e) => setFormFolderId(e.target.value || null)}
           className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/30"
         >
-          <option value="">Home (no folder)</option>
+          <option value="">Home</option>
           {folders.map(f => (
             <option key={f.id} value={f.id}>{f.name}</option>
           ))}

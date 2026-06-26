@@ -7,10 +7,10 @@
 --   notes          → main content (CRUD + realtime)
 --   user_roles     → admin auth via has_role() RPC
 --   keep_alive_logs→ admin keep-alive monitoring page
+--   folders        → admin-managed folders that group notes
 -- Tables removed (zero usage in frontend):
 --   profiles       → was only trigger-created, never queried
 --   login_history  → completely unused
---   folders        → folder_id column on notes is always null
 -- ============================================================
 
 -- ── EXTENSIONS ───────────────────────────────────────────────
@@ -33,6 +33,18 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   UNIQUE (user_id, role)
 );
 
+CREATE TABLE IF NOT EXISTS public.folders (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     uuid DEFAULT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  name        text DEFAULT 'Untitled Folder' NOT NULL,
+  color       text DEFAULT 'default',
+  parent_id   uuid DEFAULT NULL REFERENCES public.folders(id) ON DELETE CASCADE,
+  is_archived boolean DEFAULT false NOT NULL,
+  is_deleted  boolean DEFAULT false NOT NULL,
+  created_at  timestamptz DEFAULT now() NOT NULL,
+  updated_at  timestamptz DEFAULT now() NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS public.notes (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id     uuid DEFAULT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -48,7 +60,7 @@ CREATE TABLE IF NOT EXISTS public.notes (
   color       text DEFAULT 'default',
   is_archived boolean DEFAULT false NOT NULL,
   is_deleted  boolean DEFAULT false NOT NULL,
-  folder_id   uuid DEFAULT NULL, -- reserved for future use, always null currently
+  folder_id   uuid DEFAULT NULL REFERENCES public.folders(id) ON DELETE SET NULL,
   created_at  timestamptz DEFAULT now() NOT NULL,
   updated_at  timestamptz DEFAULT now() NOT NULL
 );
@@ -69,9 +81,12 @@ CREATE INDEX IF NOT EXISTS idx_notes_deleted              ON public.notes (is_de
 CREATE INDEX IF NOT EXISTS idx_notes_created_at           ON public.notes (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_keep_alive_logs_created_at ON public.keep_alive_logs (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_keep_alive_logs_status     ON public.keep_alive_logs (status);
+CREATE INDEX IF NOT EXISTS idx_folders_parent_id          ON public.folders (parent_id);
+CREATE INDEX IF NOT EXISTS idx_notes_folder_id            ON public.notes (folder_id);
 
 -- Needed for realtime change tracking
-ALTER TABLE public.notes REPLICA IDENTITY FULL;
+ALTER TABLE public.notes   REPLICA IDENTITY FULL;
+ALTER TABLE public.folders REPLICA IDENTITY FULL;
 
 -- ── FUNCTIONS (after tables so SQL functions can resolve refs) 
 
@@ -131,10 +146,16 @@ CREATE TRIGGER notes_discord_logger
   AFTER INSERT ON public.notes
   FOR EACH ROW EXECUTE FUNCTION public.notify_discord_logger();
 
+DROP TRIGGER IF EXISTS update_folders_updated_at ON public.folders;
+CREATE TRIGGER update_folders_updated_at
+  BEFORE UPDATE ON public.folders
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
 -- ── ROW LEVEL SECURITY ───────────────────────────────────────
 ALTER TABLE public.user_roles      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notes           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.keep_alive_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.folders         ENABLE ROW LEVEL SECURITY;
 
 -- user_roles
 DROP POLICY IF EXISTS "Users can view their own roles" ON public.user_roles;
@@ -174,6 +195,24 @@ CREATE POLICY "Admins can delete notes" ON public.notes FOR DELETE TO authentica
 DROP POLICY IF EXISTS "Admins can view keep-alive logs" ON public.keep_alive_logs;
 CREATE POLICY "Admins can view keep-alive logs"
   ON public.keep_alive_logs FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- folders: anyone can view active folders; only admins can create/update/delete
+DROP POLICY IF EXISTS "Anyone can view folders"   ON public.folders;
+DROP POLICY IF EXISTS "Admins can create folders" ON public.folders;
+DROP POLICY IF EXISTS "Admins can update folders" ON public.folders;
+DROP POLICY IF EXISTS "Admins can delete folders" ON public.folders;
+
+CREATE POLICY "Anyone can view folders"
+  ON public.folders FOR SELECT USING (is_deleted = false);
+CREATE POLICY "Admins can create folders"
+  ON public.folders FOR INSERT TO authenticated
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can update folders"
+  ON public.folders FOR UPDATE TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can delete folders"
+  ON public.folders FOR DELETE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
 -- ── STORAGE POLICIES (note-files bucket) ─────────────────────

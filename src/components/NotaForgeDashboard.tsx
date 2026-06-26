@@ -584,11 +584,13 @@ export function NotaForgeDashboard() {
   };
 
   // Notes shown in the grid — filtered by the active folder.
-  // Home (null) shows EVERY active note; a folder shows only its own.
+  // Home (null) shows only notes that aren't in any folder.
   const visibleNotes = useMemo(() => {
-    if (selectedFolderId === null) return notes;
+    if (selectedFolderId === null) return notes.filter(n => !n.folder_id);
     return notes.filter(n => n.folder_id === selectedFolderId);
   }, [notes, selectedFolderId]);
+
+  const homeCount = useMemo(() => notes.filter(n => !n.folder_id).length, [notes]);
 
   const activeFolderName = selectedFolderId
     ? (folders.find(f => f.id === selectedFolderId)?.name ?? 'Folder')
@@ -950,7 +952,7 @@ export function NotaForgeDashboard() {
                 className="pointer-events-none absolute right-[52px] top-1/2 -translate-y-1/2 px-2 py-1 rounded-md text-[11px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
                 style={{ background: 'rgba(20,20,28,0.95)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)' }}
               >
-                Home <span style={{ color: 'rgba(255,255,255,0.45)' }}>· {notes.length}</span>
+                Home <span style={{ color: 'rgba(255,255,255,0.45)' }}>· {homeCount}</span>
               </span>
             </div>
 
