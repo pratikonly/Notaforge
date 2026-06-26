@@ -952,7 +952,7 @@ export function NotaForgeDashboard() {
                 className="pointer-events-none absolute right-[52px] top-1/2 -translate-y-1/2 px-2 py-1 rounded-md text-[11px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
                 style={{ background: 'rgba(20,20,28,0.95)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)' }}
               >
-                Home <span style={{ color: 'rgba(255,255,255,0.45)' }}>· {notes.length}</span>
+                Home <span style={{ color: 'rgba(255,255,255,0.45)' }}>· {homeCount}</span>
               </span>
             </div>
 
