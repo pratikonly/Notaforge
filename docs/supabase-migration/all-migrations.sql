@@ -197,6 +197,24 @@ CREATE POLICY "Admins can view keep-alive logs"
   ON public.keep_alive_logs FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+-- folders: anyone can view active folders; only admins can create/update/delete
+DROP POLICY IF EXISTS "Anyone can view folders"   ON public.folders;
+DROP POLICY IF EXISTS "Admins can create folders" ON public.folders;
+DROP POLICY IF EXISTS "Admins can update folders" ON public.folders;
+DROP POLICY IF EXISTS "Admins can delete folders" ON public.folders;
+
+CREATE POLICY "Anyone can view folders"
+  ON public.folders FOR SELECT USING (is_deleted = false);
+CREATE POLICY "Admins can create folders"
+  ON public.folders FOR INSERT TO authenticated
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can update folders"
+  ON public.folders FOR UPDATE TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can delete folders"
+  ON public.folders FOR DELETE TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
+
 -- ── STORAGE POLICIES (note-files bucket) ─────────────────────
 -- Create the bucket first in the dashboard: Storage → New bucket
 --   Name: note-files   Public: ON
