@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS public.notes (
   color       text DEFAULT 'default',
   is_archived boolean DEFAULT false NOT NULL,
   is_deleted  boolean DEFAULT false NOT NULL,
-  folder_id   uuid DEFAULT NULL, -- reserved for future use, always null currently
+  folder_id   uuid DEFAULT NULL REFERENCES public.folders(id) ON DELETE SET NULL,
   created_at  timestamptz DEFAULT now() NOT NULL,
   updated_at  timestamptz DEFAULT now() NOT NULL
 );
