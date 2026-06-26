@@ -81,9 +81,12 @@ CREATE INDEX IF NOT EXISTS idx_notes_deleted              ON public.notes (is_de
 CREATE INDEX IF NOT EXISTS idx_notes_created_at           ON public.notes (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_keep_alive_logs_created_at ON public.keep_alive_logs (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_keep_alive_logs_status     ON public.keep_alive_logs (status);
+CREATE INDEX IF NOT EXISTS idx_folders_parent_id          ON public.folders (parent_id);
+CREATE INDEX IF NOT EXISTS idx_notes_folder_id            ON public.notes (folder_id);
 
 -- Needed for realtime change tracking
-ALTER TABLE public.notes REPLICA IDENTITY FULL;
+ALTER TABLE public.notes   REPLICA IDENTITY FULL;
+ALTER TABLE public.folders REPLICA IDENTITY FULL;
 
 -- ── FUNCTIONS (after tables so SQL functions can resolve refs) 
 
