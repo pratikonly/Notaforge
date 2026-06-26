@@ -771,7 +771,7 @@ export function NotaForgeDashboard() {
         </aside>
 
         {/* Main grid */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px] lg:mr-[240px]">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px] lg:mr-[88px]">
           <h1 className="sr-only">NotaForge — Simple Note Sharing and Storage</h1>
 
           {/* Mobile folder chip bar */}
