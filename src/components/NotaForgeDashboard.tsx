@@ -525,6 +525,9 @@ export function NotaForgeDashboard() {
                 src={note.file_url}
                 className="max-w-full max-h-full"
                 muted
+                autoPlay
+                loop
+                playsInline
                 preload="metadata"
                 onError={() => setVideoErrors(prev => new Set([...prev, note.id]))}
               />

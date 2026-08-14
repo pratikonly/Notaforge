@@ -71,6 +71,13 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
     return () => window.removeEventListener('keydown', h);
   }, [lightbox, isEditing, onClose]);
 
+  // Reset media state when the selected note changes. Without this, opening
+  // another video can inherit the previous video's loaded/error state.
+  useEffect(() => {
+    setVideoLoaded(false);
+    setVideoError(false);
+  }, [note.id, note.file_url]);
+
   const handleSave = async () => {
     setSaving(true);
     const updated = await onSave(note.id, editTitle, editContent);
@@ -342,6 +349,8 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
                     <video
                       src={note.file_url}
                       controls
+                      playsInline
+                      preload="metadata"
                       className="w-full"
                       style={{ maxHeight: '400px', display: videoLoaded ? 'block' : 'none' }}
                       onLoadedMetadata={() => setVideoLoaded(true)}
