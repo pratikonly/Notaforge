@@ -373,7 +373,7 @@ export function NotaForgeDashboard() {
     }
   }, [uploadFile, fileUrls.length]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file' | 'video') => {
     const files = Array.from(e.target.files || []);
     // Bug fix: reset input so re-selecting the same file fires onChange again
     e.target.value = '';
@@ -381,7 +381,7 @@ export function NotaForgeDashboard() {
     // Bug fix: honour the 'type' param from the button clicked — don't let
     // detectType() override it. If user clicks the image button, force image type.
     // Only use detectType for drag-drop / paste where no button context exists.
-    const forcedType: NoteType | null = type === 'image' ? 'image' : null;
+    const forcedType: NoteType | null = type === 'image' ? 'image' : type === 'video' ? 'video' : null;
     await processFileUpload(files, forcedType);
   };
 
@@ -580,7 +580,7 @@ export function NotaForgeDashboard() {
 
   const sharedFormProps = {
     title, setTitle, content, setContent, noteType, setNoteType,
-    linkUrl, setLinkUrl, fileUrls, fileNames, isSubmitting, isUploading,
+    fileUrls, fileNames, isSubmitting, isUploading,
     uploadSuccess, uploadProgress, timeRemaining, isDragging, handleDragOver, handleDragLeave,
     handleDrop, handleFileUpload, handleSubmit, clearAttachment, removeImage,
     folders, formFolderId, setFormFolderId,

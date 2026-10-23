@@ -2,9 +2,7 @@ import { useRef } from 'react';
 import { 
   Image, 
   FileText, 
-  Link2, 
   Loader2,
-  ExternalLink,
   X,
   Check,
   Upload,
@@ -27,8 +25,6 @@ interface NoteFormPanelProps {
   setContent: (value: string) => void;
   noteType: NoteType;
   setNoteType: (value: NoteType) => void;
-  linkUrl: string;
-  setLinkUrl: (value: string) => void;
   fileUrls: string[];
   fileNames: string[];
   isSubmitting: boolean;
@@ -40,7 +36,7 @@ interface NoteFormPanelProps {
   handleDragOver: (e: React.DragEvent) => void;
   handleDragLeave: (e: React.DragEvent) => void;
   handleDrop: (e: React.DragEvent) => void;
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => void;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file' | 'video') => void;
   handleSubmit: () => void;
   clearAttachment: () => void;
   removeImage: (index: number) => void;
@@ -57,8 +53,6 @@ export function NoteFormPanel({
   setContent,
   noteType,
   setNoteType,
-  linkUrl,
-  setLinkUrl,
   fileUrls,
   fileNames,
   isSubmitting,
@@ -81,6 +75,7 @@ export function NoteFormPanel({
   // Bug fix: key changes whenever fileUrls.length changes so the input
   // element is remounted — this lets the same file be re-selected after removal.
   const imageInputKey = `img-${fileUrls.length}`;
+  const videoInputKey = `vid-${fileUrls.length}`;
   const fileInputKey  = `file-${fileUrls.length}`;
 
   return (
@@ -155,6 +150,22 @@ export function NoteFormPanel({
           </div>
         </label>
         
+        <label aria-label="Attach video">
+          <input
+            key={videoInputKey}
+            type="file"
+            accept="video/*"
+            onChange={(e) => handleFileUpload(e, 'video')}
+            className="hidden"
+            disabled={isUploading || fileUrls.length >= 5}
+            aria-label="Attach video"
+          />
+          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${noteType === 'video' && fileUrls.length > 0 ? 'bg-secondary border-white' : ''} ${fileUrls.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <Video size={18} className="text-white" aria-hidden="true" />
+            <span className="sr-only">Attach video</span>
+          </div>
+        </label>
+
         <label aria-label="Attach file">
           <input
             key={fileInputKey}
@@ -165,32 +176,13 @@ export function NoteFormPanel({
             disabled={isUploading}
             aria-label="Attach file"
           />
-          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${(noteType === 'file' || noteType === 'pdf' || noteType === 'video' || noteType === 'audio') && fileUrls.length > 0 ? 'bg-secondary border-white' : ''}`}>
+          <div className={`p-2 rounded border border-border hover:bg-secondary cursor-pointer transition-colors ${(noteType === 'file' || noteType === 'pdf' || noteType === 'audio') && fileUrls.length > 0 ? 'bg-secondary border-white' : ''}`}>
             <FileText size={18} className="text-white" aria-hidden="true" />
             <span className="sr-only">Attach file</span>
           </div>
         </label>
         
-        <button
-          type="button"
-          className={`p-2 rounded border border-border hover:bg-secondary transition-colors ${noteType === 'link' ? 'bg-secondary border-white' : ''}`}
-          onClick={() => setNoteType(noteType === 'link' ? 'text' : 'link')}
-          aria-label="Toggle link attachment"
-          aria-pressed={noteType === 'link'}
-        >
-          <Link2 size={18} className="text-white" aria-hidden="true" />
-        </button>
       </div>
-
-      {/* Link Input - Shows when link type is selected */}
-      {noteType === 'link' && (
-        <Input
-          placeholder="https://example.com"
-          value={linkUrl}
-          onChange={(e) => setLinkUrl(e.target.value)}
-          className="mb-3 bg-secondary border-border text-white placeholder:text-muted-foreground"
-        />
-      )}
 
       {/* Upload Limits & Success */}
       <div className="flex items-center justify-between mb-2">
@@ -241,7 +233,7 @@ export function NoteFormPanel({
       </Button>
 
       {/* Preview Panel - Shows under Add Note button when there's content */}
-      {(fileUrls.length > 0 || (noteType === 'link' && linkUrl)) && (
+      {fileUrls.length > 0 && (
         <div className="mt-4 pt-4 border-t border-border">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-muted-foreground">
@@ -255,19 +247,6 @@ export function NoteFormPanel({
             </button>
           </div>
           
-          {/* Link Preview */}
-          {noteType === 'link' && linkUrl && (
-            <a 
-              href={linkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-white hover:underline text-sm break-all p-2 bg-secondary rounded border border-border"
-            >
-              <ExternalLink size={14} className="shrink-0" />
-              <span className="truncate">{linkUrl}</span>
-            </a>
-          )}
-
           {/* Multi-Image Preview - Custom size, mobile optimized */}
           {noteType === 'image' && fileUrls.length > 0 && (
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
