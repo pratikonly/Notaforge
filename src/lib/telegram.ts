@@ -10,11 +10,15 @@ export const MAX_FILE_SIZE = MTPROTO_SERVER_URL
 
 export const MAX_FILE_SIZE_LABEL = MTPROTO_SERVER_URL ? '2 GB' : '50 MB';
 
+// Bot API can only download files up to 20 MB (getFile limit), so anything
+// larger must go through the Render MTProto server, which can serve any size.
+const BOT_API_LIMIT = 15 * 1024 * 1024;
+
 export async function uploadToTelegram(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<{ url: string; fileName: string } | null> {
-  if (MTPROTO_SERVER_URL && file.size > 50 * 1024 * 1024) {
+  if (MTPROTO_SERVER_URL && file.size > BOT_API_LIMIT) {
     return uploadViaMTProto(file, onProgress);
   }
   return uploadViaBotAPI(file, onProgress);
