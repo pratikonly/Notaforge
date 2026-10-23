@@ -622,6 +622,15 @@ export function NotaForgeDashboard() {
     await deleteFolder(id);
   };
 
+  // Mobile folder rail — keep the active folder centred in view
+  const mobileRailRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const rail = mobileRailRef.current;
+    const el = rail?.querySelector<HTMLElement>('[data-active="true"]');
+    if (!rail || !el) return;
+    rail.scrollTo({ top: el.offsetTop - (rail.clientHeight - el.clientHeight) / 2, behavior: 'smooth' });
+  }, [selectedFolderId, folders.length]);
+
   return (
     <div className="min-h-screen bg-transparent text-foreground flex flex-col relative">
 
@@ -782,51 +791,31 @@ export function NotaForgeDashboard() {
         </aside>
 
         {/* Main grid */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:ml-[300px] lg:mr-[88px]">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto ml-[60px] lg:ml-[300px] px-2 sm:px-4 md:px-6 pt-0 pb-20 lg:pb-4 lg:mr-[88px]">
           <h1 className="sr-only">NotaForge — Simple Note Sharing and Storage</h1>
 
-          {/* Mobile folder chip bar */}
-          <div className="lg:hidden mb-3 -mx-1 px-1 overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-1.5 min-w-max pb-1">
-              <button
-                onClick={() => setSelectedFolderId(null)}
-                className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0"
-                style={{
-                  background: selectedFolderId === null ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${selectedFolderId === null ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
-                  color: selectedFolderId === null ? '#fff' : 'rgba(255,255,255,0.55)',
-                }}
-              >
-                <HomeIcon size={12} /> Home
-              </button>
-              {folders.map(f => (
-                <button
-                  key={f.id}
-                  onClick={() => setSelectedFolderId(f.id)}
-                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0"
-                  style={{
-                    background: selectedFolderId === f.id ? 'rgba(255,200,60,0.15)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${selectedFolderId === f.id ? 'rgba(255,200,60,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                    color: selectedFolderId === f.id ? '#ffd966' : 'rgba(255,255,255,0.55)',
-                  }}
-                >
-                  <FolderIcon size={12} /> {f.name}
-                </button>
-              ))}
-              {isAdmin && (
-                <button
-                  onClick={() => setNewFolderOpen(true)}
-                  className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium shrink-0"
-                  style={{
-                    background: 'rgba(139,92,246,0.1)',
-                    border: '1px dashed rgba(139,92,246,0.4)',
-                    color: 'rgba(196,167,255,0.9)',
-                  }}
-                >
-                  <FolderPlus size={12} /> New
-                </button>
+          {/* Mobile folder heading — shows the active folder's full name */}
+          <div className="lg:hidden flex items-center justify-between gap-2 mb-2 px-0.5">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <h2 className="text-lg font-semibold truncate" style={{ color: selectedFolderId ? '#ffd966' : 'rgba(255,255,255,0.92)' }}>
+                {activeFolderName}
+              </h2>
+              {!loading && (
+                <span className="text-xs shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  {visibleNotes.length} {visibleNotes.length === 1 ? 'note' : 'notes'}
+                </span>
               )}
             </div>
+            {isAdmin && selectedFolderId && (
+              <button
+                onClick={() => setFolderToDelete({ id: selectedFolderId, name: activeFolderName })}
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(248,113,113,0.1)', color: 'rgba(248,113,113,0.85)' }}
+                aria-label={`Delete folder ${activeFolderName}`}
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
           </div>
 
           {loading ? (
@@ -929,6 +918,105 @@ export function NotaForgeDashboard() {
             </div>
           )}
         </main>
+
+        {/* Mobile LEFT rail — vertical folder rail (< lg) */}
+        <aside
+          aria-label="Folders"
+          className="lg:hidden fixed left-1.5 top-[84px] z-40 w-[56px] flex flex-col items-center rounded-full py-2"
+          style={{
+            maxHeight: 'calc(100dvh - 180px)',
+            background: 'rgba(10,10,16,0.6)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(18px)',
+          }}
+        >
+          <div
+            ref={mobileRailRef}
+            className="relative flex-1 min-h-0 w-full overflow-y-auto scrollbar-hide flex flex-col items-center gap-2 py-2"
+            style={{
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 10px), transparent 100%)',
+            }}
+          >
+            {/* Home */}
+            <button
+              onClick={() => setSelectedFolderId(null)}
+              data-active={selectedFolderId === null}
+              aria-label={`Home, ${homeCount} notes`}
+              aria-current={selectedFolderId === null ? 'true' : undefined}
+              className="relative shrink-0 w-11 h-11 flex items-center justify-center transition-all duration-200 active:scale-90"
+              style={{
+                borderRadius: selectedFolderId === null ? 16 : 22,
+                background: selectedFolderId === null ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${selectedFolderId === null ? 'rgba(255,255,255,0.3)' : 'transparent'}`,
+                color: selectedFolderId === null ? '#fff' : 'rgba(255,255,255,0.6)',
+              }}
+            >
+              {selectedFolderId === null && (
+                <span className="absolute -left-[5px] top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full" style={{ background: '#fff' }} />
+              )}
+              <HomeIcon size={18} />
+            </button>
+
+            {folders.length > 0 && (
+              <div className="shrink-0 w-6 h-px" style={{ background: 'rgba(255,255,255,0.12)' }} />
+            )}
+
+            {/* Folders */}
+            {folders.map(f => {
+              const active = selectedFolderId === f.id;
+              const initial = (f.name?.trim()?.[0] ?? '?').toUpperCase();
+              const count = notes.filter(n => n.folder_id === f.id).length;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setSelectedFolderId(f.id)}
+                  data-active={active}
+                  title={f.name}
+                  aria-label={`${f.name}, ${count} notes`}
+                  aria-current={active ? 'true' : undefined}
+                  className="relative shrink-0 w-11 h-11 flex items-center justify-center transition-all duration-200 active:scale-90"
+                  style={{
+                    borderRadius: active ? 16 : 22,
+                    background: active ? 'rgba(255,200,60,0.2)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${active ? 'rgba(255,200,60,0.5)' : 'transparent'}`,
+                    color: active ? '#ffd966' : 'rgba(255,255,255,0.7)',
+                  }}
+                >
+                  {active && (
+                    <span className="absolute -left-[5px] top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full" style={{ background: '#ffd966' }} />
+                  )}
+                  <span className="text-[15px] font-semibold leading-none">{initial}</span>
+                  {active && count > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                      style={{ background: '#ffd966', color: '#1a1305' }}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {isAdmin && (
+            <div className="w-full flex justify-center pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button
+                onClick={() => setNewFolderOpen(true)}
+                className="w-11 h-11 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                style={{
+                  background: 'rgba(196,167,255,0.12)',
+                  color: 'rgba(196,167,255,0.95)',
+                  border: '1px dashed rgba(196,167,255,0.4)',
+                }}
+                aria-label="Create new folder"
+              >
+                <FolderPlus size={18} />
+              </button>
+            </div>
+          )}
+        </aside>
 
         {/* Desktop RIGHT sidebar — folder rail (icons only with hover labels) */}
         <aside
