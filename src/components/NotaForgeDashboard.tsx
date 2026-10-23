@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { NoteFormPanel } from '@/components/NoteFormPanel';
 import { PdfThumbnail } from '@/components/PdfThumbnail';
+import { NotesGridSkeleton, FolderRailSkeleton } from '@/components/NotesSkeleton';
 import { 
   Sheet,
   SheetContent,
@@ -17,7 +18,6 @@ import {
 import {
   FileText,
   Trash2,
-  Loader2,
   ExternalLink,
   Download,
   Pencil,
@@ -240,7 +240,7 @@ function CopyButton({ text }: { text: string }) {
 
 export function NotaForgeDashboard() {
   const { notes, loading, createNote, updateNote, deleteNote, uploadFile } = usePublicNotes();
-  const { folders, createFolder, deleteFolder } = useFolders();
+  const { folders, loading: foldersLoading, createFolder, deleteFolder } = useFolders();
   const isMobile = useIsMobile();
   const { isAdmin, login, logout, loading: authLoading } = useAdminAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -819,9 +819,7 @@ export function NotaForgeDashboard() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="animate-spin" size={32} />
-            </div>
+            <NotesGridSkeleton />
           ) : visibleNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <FileText size={48} className="mb-4" />
@@ -958,12 +956,14 @@ export function NotaForgeDashboard() {
               <HomeIcon size={18} />
             </button>
 
-            {folders.length > 0 && (
+            {foldersLoading && <FolderRailSkeleton size={44} />}
+
+            {!foldersLoading && folders.length > 0 && (
               <div className="shrink-0 w-6 h-px" style={{ background: 'rgba(255,255,255,0.12)' }} />
             )}
 
             {/* Folders */}
-            {folders.map(f => {
+            {!foldersLoading && folders.map(f => {
               const active = selectedFolderId === f.id;
               const initial = (f.name?.trim()?.[0] ?? '?').toUpperCase();
               const count = notes.filter(n => n.folder_id === f.id).length;
@@ -1053,7 +1053,9 @@ export function NotaForgeDashboard() {
               </span>
             </div>
 
-            {folders.map(f => {
+            {foldersLoading && <FolderRailSkeleton size={40} />}
+
+            {!foldersLoading && folders.map(f => {
               const count = notes.filter(n => n.folder_id === f.id).length;
               const active = selectedFolderId === f.id;
               const initial = (f.name?.trim()?.[0] ?? '?').toUpperCase();
