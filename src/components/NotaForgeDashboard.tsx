@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { NoteFormPanel } from '@/components/NoteFormPanel';
+import { PdfThumbnail } from '@/components/PdfThumbnail';
 import { 
   Sheet,
   SheetContent,
@@ -549,14 +550,19 @@ export function NotaForgeDashboard() {
         return note.file_url ? (
           <div className="flex flex-col items-center justify-center h-full gap-2.5">
             {isPdfFile(note) ? (
-              <>
-                <div className="w-12 h-15 rounded-xl flex flex-col items-center justify-center gap-1 shadow-lg"
-                     style={{ background: 'linear-gradient(145deg,#ef4444,#b91c1c)', boxShadow: '0 4px 16px rgba(239,68,68,0.3)' }}>
-                  <FileIcon size={18} className="text-white/80" />
-                  <span className="text-white text-[9px] font-bold tracking-widest">PDF</span>
-                </div>
-                <span className="text-[10px] truncate max-w-full px-2 text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>{note.file_name}</span>
-              </>
+              <PdfThumbnail
+                url={note.file_url}
+                fallback={
+                  <>
+                    <div className="w-12 h-15 rounded-xl flex flex-col items-center justify-center gap-1 shadow-lg"
+                         style={{ background: 'linear-gradient(145deg,#ef4444,#b91c1c)', boxShadow: '0 4px 16px rgba(239,68,68,0.3)' }}>
+                      <FileIcon size={18} className="text-white/80" />
+                      <span className="text-white text-[9px] font-bold tracking-widest">PDF</span>
+                    </div>
+                    <span className="text-[10px] truncate max-w-full px-2 text-center" style={{ color: 'rgba(255,255,255,0.4)' }}>{note.file_name}</span>
+                  </>
+                }
+              />
             ) : (
               <>
                 <div className="w-12 h-14 rounded-xl flex items-center justify-center shadow-lg"

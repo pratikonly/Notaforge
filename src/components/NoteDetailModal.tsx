@@ -13,6 +13,7 @@ import {
   RotateCw, ChevronLeft, ChevronRight, Check, Maximize2, Copy, Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { PdfViewer } from '@/components/PdfViewer';
 
 interface NoteDetailModalProps {
   note: Note;
@@ -54,7 +55,6 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
   const [copied, setCopied] = useState(false);
   const [videoLoaded, setVideoLoaded]   = useState(false);
   const [videoError, setVideoError]     = useState(false);
-  const [pdfLoaded, setPdfLoaded]       = useState(false);
   const ac = getAccent(note.note_type);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -414,27 +414,11 @@ export function NoteDetailModal({ note, isAdmin, onClose, onSave, onDelete, onDo
               <div className="space-y-4">
                 {isPdf ? (
                   <>
-                    {/* PDF inline viewer with loading state */}
-                    <div className="rounded-2xl overflow-hidden border border-white/10 relative"
-                         style={{ background: '#1a1a2e', minHeight: '420px' }}>
-                      {!pdfLoaded && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
-                          <Loader2 size={22} className="animate-spin" style={{ color: 'rgba(96,165,250,0.7)' }} />
-                          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Loading PDF…</span>
-                          <a href={note.file_url} target="_blank" rel="noopener noreferrer"
-                             className="text-xs underline mt-1" style={{ color: '#60a5fa' }}>
-                            Open in new tab instead
-                          </a>
-                        </div>
-                      )}
-                      <iframe
-                        src={note.file_url}
-                        title={note.file_name || 'PDF'}
-                        className="w-full"
-                        style={{ height: '420px', border: 'none', display: pdfLoaded ? 'block' : 'none' }}
-                        onLoad={() => setPdfLoaded(true)}
-                      />
-                    </div>
+                    <PdfViewer url={note.file_url} fileName={note.file_name} />
+                    <a href={note.file_url} target="_blank" rel="noopener noreferrer"
+                       className="text-xs underline" style={{ color: '#60a5fa' }}>
+                      Open in new tab
+                    </a>
                     <DownloadRow url={note.file_url} name={note.file_name || 'document.pdf'} onDownload={onDownload} color="#60a5fa" />
                   </>
                 ) : (
