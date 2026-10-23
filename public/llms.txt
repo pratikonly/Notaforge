@@ -2,7 +2,7 @@
 
 > Simple notes vault to store, share, and organize text, images, PDFs, audio, video, and links. Built by Pratik.
 
-NotaForge is a public note-sharing app hosted at https://notaforge.qzz.io. Anyone can view and create notes; admins can edit and delete. Files are stored via Cloudinary.
+NotaForge is a public note-sharing app hosted at https://notaforge.qzz.io. Anyone can view and create notes; admins can edit and delete. Files are stored via Telegram.
 
 ## Pages
 

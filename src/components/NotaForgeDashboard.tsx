@@ -464,7 +464,7 @@ export function NotaForgeDashboard() {
   };
   const formatTimestamp = (date: string) => format(new Date(date), 'dd/MM/yy · HH:mm');
 
-  // Bug fix: fetch() fails silently on Cloudinary raw/file URLs due to CORS.
+  // Bug fix: fetch() fails silently on cross-origin file URLs due to CORS.
   // Direct anchor with download attribute works cross-origin without a fetch.
   // If the browser blocks it (some mobile), fallback to _blank open.
   const downloadFile = (url: string, filename: string) => {
