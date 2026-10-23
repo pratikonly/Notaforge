@@ -13,6 +13,7 @@ const fs       = require('fs');
 const { TelegramClient, Api } = require('telegram');
 const { StringSession }       = require('telegram/sessions');
 const { CustomFile }          = require('telegram/client/uploads');
+const bigInt                  = require('big-integer'); // GramJS needs this type for offsets, not native BigInt
 
 const app = express();
 app.use(cors({ exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'] }));
@@ -241,9 +242,8 @@ async function streamRange(doc, start, end, res, isClosed) {
   for await (const chunk of client.iterDownload({
     file: fileLocation,
     requestSize: CHUNK,
-    offset: BigInt(alignedStart),
+    offset: bigInt(alignedStart),
     limit: chunks,
-    fileSize: BigInt(doc.size),
     dcId: doc.dcId,
   })) {
     if (isClosed() || sent >= length) break;
